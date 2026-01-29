@@ -105,7 +105,7 @@ namespace DrawProject.ViewModels
         // === КОНСТРУКТОР ===
         public MainViewModel()
         {
-            CurrentDoc = new ImageDocument(800, 600);
+            CurrentDoc = new ImageDocument(8000, 6000);
 
             ClearCommand = new RelayCommand(ClearCanvas);
             ChangeColorCommand = new RelayCommand<Color>(ChangeColor);

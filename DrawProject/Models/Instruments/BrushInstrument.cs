@@ -22,7 +22,6 @@ namespace DrawProject.Models.Instruments
         public Canvas VectorOverlay { get; set; }
         public ImageSource Icon => throw new NotImplementedException();
 
-        private List<UIElement> _currentStroke = new();
         public override void OnMouseDown(InstrumentContext context)
         {
             Brush = context.Brush;
@@ -42,11 +41,10 @@ namespace DrawProject.Models.Instruments
             var preview = Brush.Shape.GetPreviewElement(context.Position,
                 (int)(context.Brush.Size * context.Pressure), Brush.Color, Brush.Opacity);
             VectorOverlay.Children.Add(preview);
-            _currentStroke.Add(preview);
             // Интерполяция для плавного рисования
             if (context.LastPosition != default)
             {
-                InterpolateBrushPoints(context.LastPosition, context.Position);
+                //InterpolateBrushPoints(context.LastPosition, context.Position);
             }
         }
 
@@ -80,7 +78,6 @@ namespace DrawProject.Models.Instruments
                     Brush.Size, Brush.Color, Brush.Opacity);
 
                 VectorOverlay.Children.Add(preview);
-                _currentStroke.Add(preview);
             }
         }
     }

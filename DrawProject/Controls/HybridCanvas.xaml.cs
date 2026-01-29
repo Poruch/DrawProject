@@ -1,34 +1,33 @@
 ﻿using DrawProject.Models;
 using DrawProject.Models.Instruments;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace DrawProject.Controls
 {
-    /// <summary>
-    /// Логика взаимодействия для HybridCanvas.xaml
-    /// </summary>
     public partial class HybridCanvas : UserControl
     {
         // === DEPENDENCY PROPERTIES ===
         public static readonly DependencyProperty BrushProperty =
             DependencyProperty.Register("Brush", typeof(Brush), typeof(HybridCanvas),
-                new PropertyMetadata(null, OnBrushChanged));
+                new PropertyMetadata(null));
 
         public static readonly DependencyProperty ToolProperty =
             DependencyProperty.Register("Tool", typeof(Tool), typeof(HybridCanvas),
-                new PropertyMetadata(null, OnInstrumentChanged));
+                new PropertyMetadata(null));
 
         public static readonly DependencyProperty ImageDocumentProperty =
             DependencyProperty.Register("ImageDocument", typeof(ImageDocument),
-                typeof(HybridCanvas),
-                new PropertyMetadata(null, OnImageDocumentChanged));
+                typeof(HybridCanvas), new PropertyMetadata(null, OnImageDocumentChanged));
 
         // === СВОЙСТВА ===
         public Brush Brush
@@ -36,28 +35,53 @@ namespace DrawProject.Controls
             get => (Brush)GetValue(BrushProperty);
             set => SetValue(BrushProperty, value);
         }
+
         public Tool Tool
         {
             get => (Tool)GetValue(ToolProperty);
             set => SetValue(ToolProperty, value);
         }
 
+        private bool _blend = true;
+        public bool Blend { get => _blend; set => _blend = value; }
+
         public ImageDocument ImageDocument
         {
             get => (ImageDocument)GetValue(ImageDocumentProperty);
             set => SetValue(ImageDocumentProperty, value);
         }
+
         // === ПОЛЯ ===
         private Image _rasterImage;
         private Canvas _vectorOverlay;
         private bool _isDrawing = false;
-        private Point _lastPoint;
+
+        // === МНОГОПОТОЧНЫЕ ОЧЕРЕДИ ===
+        private ConcurrentQueue<MousePoint> _inputQueue;  // Для ввода мыши
+        private ConcurrentQueue<ProcessedPoint> _outputQueue; // Для рисования в UI
+        private Task _processingTask;
+        private CancellationTokenSource _cts;
+        private DispatcherTimer _uiTimer;
+
+        // Структуры данных
+        private struct MousePoint
+        {
+            public Point Position;
+            public DateTime Timestamp;
+        }
+
+        private struct ProcessedPoint
+        {
+            public Point Position;
+            public bool IsInterpolated;
+        }
 
         // === КОНСТРУКТОР ===
         public HybridCanvas()
         {
             InitializeComponent();
             InitializeLayers();
+            InitializeThreadingSystem();
         }
 
         private void InitializeLayers()
@@ -72,124 +96,226 @@ namespace DrawProject.Controls
             this.MouseMove += OnMouseMove;
             this.MouseLeftButtonUp += OnMouseUp;
         }
-        public void RefreshRasterImage()
+
+        private void InitializeThreadingSystem()
         {
-            if (ImageDocument != null)
+            // 1. Инициализация очередей
+            _inputQueue = new ConcurrentQueue<MousePoint>();
+            _outputQueue = new ConcurrentQueue<ProcessedPoint>();
+            _cts = new CancellationTokenSource();
+
+            // 2. Запуск фоновой задачи обработки
+            _processingTask = Task.Run(() => ProcessPointsBackground(_cts.Token));
+
+            // 3. Таймер для UI (60 Гц)
+            _uiTimer = new DispatcherTimer
             {
-                // Создаем новый WriteableBitmap из текущего, чтобы WPF заметил изменение
-                var current = ImageDocument.GetCompositeImage();
-                var newBitmap = new WriteableBitmap(current);
-                _rasterImage.Source = newBitmap;
+                Interval = TimeSpan.FromMilliseconds(16)
+            };
+            _uiTimer.Tick += ProcessPointsInUI;
+            _uiTimer.Start();
 
-                // Принудительное обновление
-                _rasterImage.InvalidateVisual();
-                this.InvalidateVisual();
-            }
+            // 4. Очистка при уничтожении
+            this.Unloaded += (s, e) => CleanupThreading();
         }
 
-        public Canvas GetVectorOverlay()
+        // === ВВОД МЫШИ (UI поток) ===
+        private void OnMouseMove(object sender, MouseEventArgs e)
         {
-            return _vectorOverlay;
-        }
-        public Image GetRasterImage()
-        {
-            return _rasterImage;
-        }
-        private static void OnBrushChanged(DependencyObject d,
-            DependencyPropertyChangedEventArgs e)
-        {
-            // Можно обработать изменение кисти
-        }
-        private static void OnInstrumentChanged(DependencyObject d,
-            DependencyPropertyChangedEventArgs e)
-        {
-            var canvas = d as HybridCanvas;
-            Debug.WriteLine($"Инструмент изменен: {e.NewValue?.GetType().Name}");
+            if (!_isDrawing) return;
 
-            // Можно обработать изменение инструмента
-        }
-        private static void OnImageDocumentChanged(DependencyObject d,
-            DependencyPropertyChangedEventArgs e)
-        {
-            var canvas = d as HybridCanvas;
-
-            if (e.NewValue is ImageDocument newDoc)
+            // Просто добавляем точку в очередь ввода - ОЧЕНЬ БЫСТРО!
+            _inputQueue.Enqueue(new MousePoint
             {
-                // 1. Обновляем растровый слой
-                canvas._rasterImage.Source = newDoc.GetCompositeImage();
-                canvas._rasterImage.Width = newDoc.Width;
-                canvas._rasterImage.Height = newDoc.Height;
+                Position = e.GetPosition(this),
+                Timestamp = DateTime.Now
+            });
+        }
 
-                // 2. Обновляем векторный слой
-                canvas._vectorOverlay.Width = newDoc.Width;
-                canvas._vectorOverlay.Height = newDoc.Height;
+        // === ФОНОВАЯ ОБРАБОТКА (отдельный поток!) ===
+        private async Task ProcessPointsBackground(CancellationToken ct)
+        {
+            MousePoint? lastPoint = null;
 
-                // 3. Обновляем размер всего Canvas
-                canvas.Width = newDoc.Width;
-                canvas.Height = newDoc.Height;
-
-                // 4. Обновляем rootCanvas
-                if (canvas.rootCanvas != null)
+            while (!ct.IsCancellationRequested)
+            {
+                try
                 {
-                    canvas.rootCanvas.Width = newDoc.Width;
-                    canvas.rootCanvas.Height = newDoc.Height;
+                    // Обрабатываем все точки из входной очереди
+                    while (_inputQueue.TryDequeue(out var currentPoint))
+                    {
+                        if (lastPoint.HasValue)
+                        {
+                            // Интерполируем между точками в фоновом потоке!
+                            InterpolateBetweenPoints(lastPoint.Value, currentPoint);
+                        }
+
+                        // Добавляем оригинальную точку
+                        _outputQueue.Enqueue(new ProcessedPoint
+                        {
+                            Position = currentPoint.Position,
+                            IsInterpolated = false
+                        });
+
+                        lastPoint = currentPoint;
+                    }
+
+                    // Короткая пауза чтобы не грузить CPU
+                    await Task.Delay(1, ct);
                 }
-
-                // 5. Очищаем старый векторный слой
-                canvas._vectorOverlay.Children.Clear();
-
-                Debug.WriteLine($"Document changed: {newDoc.Width}x{newDoc.Height}");
-            }
-            else if (e.NewValue == null)
-            {
-                // Если документ удален - очищаем всё
-                canvas._rasterImage.Source = null;
-                canvas._vectorOverlay.Children.Clear();
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Background processing error: {ex.Message}");
+                }
             }
         }
 
-        // === МЕТОДЫ РИСОВАНИЯ ===
+        private void InterpolateBetweenPoints(MousePoint from, MousePoint to)
+        {
+            // ВСЕ ВЫЧИСЛЕНИЯ в фоновом потоке!
+            double distance = Math.Sqrt(
+                Math.Pow(to.Position.X - from.Position.X, 2) +
+                Math.Pow(to.Position.Y - from.Position.Y, 2));
+
+            double timeDiff = (to.Timestamp - from.Timestamp).TotalMilliseconds;
+            double speed = distance / Math.Max(1, timeDiff);
+
+            // Определяем нужно ли интерполировать
+            if (distance > 2.0 && speed > 2.0)
+            {
+                int steps = CalculateSteps(distance, speed);
+
+                for (int i = 1; i < steps; i++)
+                {
+                    double t = i / (double)steps;
+                    Point interpolated = new Point(
+                        from.Position.X + (to.Position.X - from.Position.X) * t,
+                        from.Position.Y + (to.Position.Y - from.Position.Y) * t);
+
+                    _outputQueue.Enqueue(new ProcessedPoint
+                    {
+                        Position = interpolated,
+                        IsInterpolated = true
+                    });
+                }
+            }
+        }
+
+        private int CalculateSteps(double distance, double speed)
+        {
+            int steps = (int)(distance / Math.Max(1, (Brush?.Size ?? 10) * 0.3));
+
+            // Больше шагов при большей скорости
+            if (speed > 10) steps *= 2;
+            if (speed > 20) steps *= 3;
+
+            return Math.Clamp(steps, 1, 15);
+        }
+
+        // === ОБРАБОТКА В UI ПОТОКЕ ===
+        private void ProcessPointsInUI(object sender, EventArgs e)
+        {
+            if (!_isDrawing || Tool == null) return;
+
+            // Обрабатываем до 20 точек за кадр
+            int pointsProcessed = 0;
+            const int maxPointsPerFrame = 20;
+
+            while (pointsProcessed < maxPointsPerFrame &&
+                   _outputQueue.TryDequeue(out var point))
+            {
+                // ВСЕ UI операции здесь!
+                var context = new InstrumentContext(this, point.Position, default);
+                Tool.OnMouseMove(context);
+
+                pointsProcessed++;
+            }
+
+            // Автоматическая регулировка частоты
+            AdjustUITimer();
+        }
+
+        private void AdjustUITimer()
+        {
+            if (_outputQueue.Count > 30)
+            {
+                _uiTimer.Interval = TimeSpan.FromMilliseconds(8); // 125 Гц
+            }
+            else if (_outputQueue.Count > 50)
+            {
+                _uiTimer.Interval = TimeSpan.FromMilliseconds(4); // 250 Гц
+            }
+            else
+            {
+                _uiTimer.Interval = TimeSpan.FromMilliseconds(16); // 60 Гц
+            }
+        }
+
+        // === УПРАВЛЕНИЕ СОСТОЯНИЕМ ===
         private void OnMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (Brush == null || ImageDocument?.ActiveLayer == null) return;
 
             _isDrawing = true;
 
-            InstrumentContext context = new InstrumentContext(this, e, _lastPoint);
-            Tool.OnMouseDown(context);
+            // Очищаем очереди
+            ClearQueues();
 
-            _lastPoint = e.GetPosition(this);
+            // Первая точка - рисуем сразу в UI
+            var point = e.GetPosition(this);
+            var context = new InstrumentContext(this, e, default);
+            Tool?.OnMouseDown(context);
+
+            // Также добавляем в очередь для обработки
+            _inputQueue.Enqueue(new MousePoint
+            {
+                Position = point,
+                Timestamp = DateTime.Now
+            });
 
             CaptureMouse();
         }
 
-        private void OnMouseMove(object sender, MouseEventArgs e)
-        {
-            if (!_isDrawing || Brush == null) return;
-
-            InstrumentContext context = new InstrumentContext(this, e, _lastPoint);
-
-            Tool.OnMouseMove(context);
-
-            _lastPoint = context.Position;
-        }
-
-
-
         private void OnMouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (!_isDrawing || Brush == null) return;
+            if (!_isDrawing) return;
 
             _isDrawing = false;
             ReleaseMouseCapture();
 
-            InstrumentContext context = new InstrumentContext(this, e, _lastPoint);
+            // Обрабатываем все оставшиеся точки
+            ProcessAllRemainingPoints();
 
-            Tool.OnMouseUp(context);
-            // Переносим на растровый слой
+            var context = new InstrumentContext(this, e, default);
+            Tool?.OnMouseUp(context);
+
             CommitDrawing();
         }
 
+        private void ProcessAllRemainingPoints()
+        {
+            // Ждем пока фоновый поток обработает все
+            int attempts = 0;
+            while ((_inputQueue.Count > 0 || _outputQueue.Count > 0) && attempts < 100)
+            {
+                Thread.Sleep(1);
+                ProcessPointsInUI(null, EventArgs.Empty);
+                attempts++;
+            }
+        }
+
+        private void ClearQueues()
+        {
+            // Очищаем очереди
+            while (_inputQueue.TryDequeue(out _)) { }
+            while (_outputQueue.TryDequeue(out _)) { }
+        }
+
+        // === КОММИТ И ОЧИСТКА ===
         public void CommitDrawing()
         {
             if (_vectorOverlay.Children.Count == 0 ||
@@ -197,31 +323,91 @@ namespace DrawProject.Controls
                 ImageDocument?.ActiveLayer == null)
                 return;
 
-            // Рендерим векторный слой в битмап
-            var renderTarget = new RenderTargetBitmap(
-                (int)_vectorOverlay.ActualWidth,
-                (int)_vectorOverlay.ActualHeight,
-                96, 96, PixelFormats.Pbgra32);
+            try
+            {
+                var renderTarget = new RenderTargetBitmap(
+                    (int)_vectorOverlay.ActualWidth,
+                    (int)_vectorOverlay.ActualHeight,
+                    96, 96, PixelFormats.Pbgra32);
 
-            renderTarget.Render(_vectorOverlay);
-
-            // Применяем к активному слою
-            //ImageDocument.ActiveLayer.ApplyVectorLayer(renderTarget, Brush);
-            ImageDocument.ApplyVectorLayer(renderTarget);
-            // Обновляем отображение
-            _rasterImage.Source = ImageDocument.GetCompositeImage();
-
-            // Очищаем векторный слой
-            _vectorOverlay.Children.Clear();
+                renderTarget.Render(_vectorOverlay);
+                ImageDocument.ApplyVectorLayer(renderTarget, Blend);
+                _rasterImage.Source = ImageDocument.GetCompositeImage();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"CommitDrawing error: {ex.Message}");
+            }
+            finally
+            {
+                _vectorOverlay.Children.Clear();
+                Blend = true;
+            }
         }
 
-        // Метод для очистки холста
+        private void CleanupThreading()
+        {
+            _cts?.Cancel();
+            _uiTimer?.Stop();
+
+            try
+            {
+                _processingTask?.Wait(1000);
+            }
+            catch { }
+
+            _cts?.Dispose();
+        }
+
+        // === ОСТАЛЬНЫЕ МЕТОДЫ ===
+        private static void OnImageDocumentChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var canvas = d as HybridCanvas;
+
+            if (e.NewValue is ImageDocument newDoc)
+            {
+                canvas._rasterImage.Source = newDoc.GetCompositeImage();
+                canvas._rasterImage.Width = newDoc.Width;
+                canvas._rasterImage.Height = newDoc.Height;
+
+                canvas._vectorOverlay.Width = newDoc.Width;
+                canvas._vectorOverlay.Height = newDoc.Height;
+
+                canvas.Width = newDoc.Width;
+                canvas.Height = newDoc.Height;
+
+                if (canvas.rootCanvas != null)
+                {
+                    canvas.rootCanvas.Width = newDoc.Width;
+                    canvas.rootCanvas.Height = newDoc.Height;
+                }
+
+                canvas._vectorOverlay.Children.Clear();
+            }
+            else if (e.NewValue == null)
+            {
+                canvas._rasterImage.Source = null;
+                canvas._vectorOverlay.Children.Clear();
+            }
+        }
+
+        public void RefreshRasterImage()
+        {
+            if (ImageDocument != null)
+            {
+                _rasterImage.Source = ImageDocument.GetCompositeImage();
+            }
+        }
+
+        public Canvas GetVectorOverlay() => _vectorOverlay;
+        public Image GetRasterImage() => _rasterImage;
+
         public void ClearCanvas()
         {
+            ClearQueues();
             _vectorOverlay.Children.Clear();
             ImageDocument?.Clear();
             _rasterImage.Source = ImageDocument?.GetCompositeImage();
         }
     }
 }
-

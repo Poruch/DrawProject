@@ -4,23 +4,34 @@ using System.Windows.Media.Imaging;
 
 namespace DrawProject.Models
 {
-    public class ImageDocument
+    public class ImageDocument : IDisposable
     {
         // === ДАННЫЕ ИЗОБРАЖЕНИЯ ===
         public WriteableBitmap Bitmap { get; private set; }
-
-        public WriteableBitmap ActiveLayer
-        {
-            get => Bitmap;
-        }
+        public WriteableBitmap ActiveLayer => Bitmap;
         public int Width { get; }
         public int Height { get; }
+
+        // Предвычисленные значения
+        private readonly int _stride;
+        private readonly int _bufferSize;
+
+        // КЭШИРОВАННЫЕ БУФЕРЫ (создаются один раз!)
+        private readonly byte[] _vectorBuffer;
+        private readonly byte[] _rasterBuffer; // ← Добавляем буфер для raster
 
         // === КОНСТРУКТОР ===
         public ImageDocument(int width, int height)
         {
             Width = width;
             Height = height;
+            _stride = width * 4;
+            _bufferSize = _stride * height;
+
+            // Создаем буферы ОДИН РАЗ в конструкторе
+            _vectorBuffer = new byte[_bufferSize];
+            _rasterBuffer = new byte[_bufferSize]; // ← Кэшируем raster буфер
+
             InitializeBitmap();
         }
 
@@ -34,74 +45,135 @@ namespace DrawProject.Models
         // === ОЧИСТКА ===
         public void Clear()
         {
-            var pixels = new byte[Width * Height * 4];
-            for (int i = 0; i < pixels.Length; i += 4)
+            Bitmap.Lock();
+            try
             {
-                pixels[i] = 255;     // B
-                pixels[i + 1] = 255; // G
-                pixels[i + 2] = 255; // R
-                pixels[i + 3] = 255; // A
-            }
+                // Используем WritePixels для быстрой очистки
+                var clearPixels = new byte[_bufferSize];
+                for (int i = 0; i < clearPixels.Length; i += 4)
+                {
+                    clearPixels[i] = 255;     // B
+                    clearPixels[i + 1] = 255; // G
+                    clearPixels[i + 2] = 255; // R
+                    clearPixels[i + 3] = 255; // A
+                }
 
-            Bitmap.WritePixels(new Int32Rect(0, 0, Width, Height),
-                pixels, Width * 4, 0);
+                Bitmap.WritePixels(new Int32Rect(0, 0, Width, Height),
+                    clearPixels, _stride, 0);
+            }
+            finally
+            {
+                Bitmap.Unlock();
+            }
         }
 
         public WriteableBitmap GetCompositeImage()
         {
             return Bitmap;
-            // 1. Создаем пустой битмап
-            var composite = new WriteableBitmap(Width, Height, 96, 96,
-                PixelFormats.Pbgra32, null);
-
-            // 2. Очищаем его (прозрачный)
-            //ClearBitmap(composite);
-
-            // 3. Накладываем ВСЕ видимые слои сверху вниз
-            //foreach (var layer in Layers.Where(l => l.IsVisible))
-            {
-                //BlendLayer(composite, layer);
-            }
-
-            return composite; // ← Возвращаем WriteableBitmap!
         }
 
         // === ПЕРЕНОС ВЕКТОРА В РАСТР ===
-        public void ApplyVectorLayer(BitmapSource vectorLayer)
+        public void ApplyVectorLayer(BitmapSource vectorLayer, bool isEraser = false)
         {
-            // Смешиваем векторный слой с растровым
-            BlendBitmaps(vectorLayer);
-        }
+            if (vectorLayer == null) return;
 
-        private void BlendBitmaps(BitmapSource source)
-        {
-            int width = Bitmap.PixelWidth;
-            int height = Bitmap.PixelHeight;
 
-            byte[] rasterPixels = new byte[width * height * 4];
-            byte[] vectorPixels = new byte[width * height * 4];
+            // Копируем векторный слой в кэшированный буфер
+            vectorLayer.CopyPixels(_vectorBuffer, _stride, 0);
 
-            Bitmap.CopyPixels(rasterPixels, width * 4, 0);
-            source.CopyPixels(vectorPixels, width * 4, 0);
+            // Копируем текущий Bitmap в кэшированный буфер
+            Bitmap.CopyPixels(_rasterBuffer, _stride, 0);
 
-            for (int i = 0; i < rasterPixels.Length; i += 4)
+            if (!isEraser)
             {
-                double alpha = vectorPixels[i + 3] / 255.0;
-
-                if (alpha > 0)
-                {
-                    rasterPixels[i] = (byte)(vectorPixels[i] * alpha +
-                        rasterPixels[i] * (1 - alpha));
-                    rasterPixels[i + 1] = (byte)(vectorPixels[i + 1] * alpha +
-                        rasterPixels[i + 1] * (1 - alpha));
-                    rasterPixels[i + 2] = (byte)(vectorPixels[i + 2] * alpha +
-                        rasterPixels[i + 2] * (1 - alpha));
-                    rasterPixels[i + 3] = 255;
-                }
+                ApplyEraser(_rasterBuffer, _vectorBuffer);
+            }
+            else
+            {
+                ApplyBrush(_rasterBuffer, _vectorBuffer);
             }
 
-            Bitmap.WritePixels(new Int32Rect(0, 0, width, height),
-                rasterPixels, width * 4, 0);
+            // Записываем обратно
+            Bitmap.WritePixels(new Int32Rect(0, 0, Width, Height),
+                _rasterBuffer, _stride, 0);
+
+        }
+
+        private void ApplyBrush(byte[] rasterPixels, byte[] vectorPixels)
+        {
+            // Кисть: обычный альфа-блендинг
+            for (int i = 0; i < rasterPixels.Length; i += 4)
+            {
+                byte vectorAlpha = vectorPixels[i + 3];
+
+                if (vectorAlpha > 0)
+                {
+                    if (vectorAlpha == 255)
+                    {
+                        // Полная замена (самый быстрый случай)
+                        rasterPixels[i] = vectorPixels[i];     // B
+                        rasterPixels[i + 1] = vectorPixels[i + 1]; // G
+                        rasterPixels[i + 2] = vectorPixels[i + 2]; // R
+                        rasterPixels[i + 3] = 255; // A
+                    }
+                    else
+                    {
+                        // Альфа-блендинг
+                        double alpha = vectorAlpha / 255.0;
+                        double invAlpha = 1.0 - alpha;
+
+                        rasterPixels[i] = (byte)(vectorPixels[i] * alpha +
+                                               rasterPixels[i] * invAlpha);
+                        rasterPixels[i + 1] = (byte)(vectorPixels[i + 1] * alpha +
+                                                   rasterPixels[i + 1] * invAlpha);
+                        rasterPixels[i + 2] = (byte)(vectorPixels[i + 2] * alpha +
+                                                   rasterPixels[i + 2] * invAlpha);
+                        rasterPixels[i + 3] = 255;
+                    }
+                }
+            }
+        }
+
+        private void ApplyEraser(byte[] rasterPixels, byte[] vectorPixels)
+        {
+            // Ластик: где векторный слой не прозрачен - стираем
+            for (int i = 0; i < rasterPixels.Length; i += 4)
+            {
+                // Проверяем, есть ли в векторном слое что-то для стирания
+                if (vectorPixels[i + 3] > 10) // Порог 10 для игнорирования шума
+                {
+                    // Делаем пиксель полностью прозрачным
+                    rasterPixels[i + 3] = 0;
+                }
+            }
+        }
+
+
+        // === IDisposable для освобождения ресурсов ===
+        private bool _disposed = false;
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // Освобождаем управляемые ресурсы
+                    Bitmap = null;
+                }
+                _disposed = true;
+            }
+        }
+
+        ~ImageDocument()
+        {
+            Dispose(false);
         }
     }
 }
