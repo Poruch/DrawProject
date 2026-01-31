@@ -35,7 +35,6 @@ namespace DrawProject.Services
 
         // === ПОЛЯ ===
         private readonly UIElement _targetElement;
-        private readonly ConcurrentQueue<MousePoint> _pointQueue = new();
 
         // Потоки
         private Task _inputTask;
@@ -51,7 +50,6 @@ namespace DrawProject.Services
 
         // === СВОЙСТВА ===
         public bool IsRunning { get; private set; }
-        public int QueueSize => _pointQueue.Count;
         public MousePoint LastPosition => _lastRawPosition;
         public bool IsMouseOver => _targetElement.IsMouseOver;
 
@@ -91,9 +89,6 @@ namespace DrawProject.Services
             _cts = new CancellationTokenSource();
             _isCapturing = false;
 
-            // Запускаем фоновый поток для опроса мыши
-            _inputTask = Task.Run(PollMousePosition, _cts.Token);
-
             // Запускаем таймер диспатча
             _dispatchTimer.Start();
 
@@ -110,7 +105,6 @@ namespace DrawProject.Services
 
             _cts?.Cancel();
             _dispatchTimer.Stop();
-            _pointQueue.Clear();
 
             try
             {
@@ -128,7 +122,6 @@ namespace DrawProject.Services
         public void StartCapture()
         {
             _isCapturing = true;
-            _pointQueue.Clear();
             Debug.WriteLine("[MouseInputService] Capture started");
         }
 
@@ -141,137 +134,17 @@ namespace DrawProject.Services
             Debug.WriteLine("[MouseInputService] Capture stopped");
         }
 
-        /// <summary>
-        /// Получить все накопленные точки
-        /// </summary>
-        public MousePoint[] GetCapturedPoints()
-        {
-            return _pointQueue.ToArray();
-        }
-
-        /// <summary>
-        /// Попытаться получить следующую точку
-        /// </summary>
-        public bool TryGetNextPoint(out MousePoint point)
-        {
-            return _pointQueue.TryDequeue(out point);
-        }
-
-        // === ФОНОВЫЙ ПОТОК ОПРОСА ===
-        private async Task PollMousePosition()
-        {
-            var sleepTime = (int)(1000.0 / INPUT_POLLING_RATE_HZ);
-            MousePoint? lastPoint = null;
-
-            while (!_cts.Token.IsCancellationRequested)
-            {
-                try
-                {
-                    // Проверяем что мышь над элементом
-                    if (_targetElement.IsMouseOver && _isCapturing)
-                    {
-                        // Получаем позицию мыши
-                        var currentPos = Mouse.GetPosition(_targetElement);
-
-                        // Проверяем что позиция в пределах элемента
-                        if (currentPos.X >= 0 && currentPos.Y >= 0 &&
-                            currentPos.X <= _targetElement.RenderSize.Width &&
-                            currentPos.Y <= _targetElement.RenderSize.Height)
-                        {
-                            _lastRawPosition = new MousePoint
-                            {
-                                Position = currentPos,
-                                Timestamp = DateTime.Now,
-                                Pressure = GetPressure(),
-                                IsPen = IsPenActive()
-                            };
-
-                            _lastInputTime = DateTime.Now;
-
-                            // Создаем точку
-                            var point = new MousePoint
-                            {
-                                Position = currentPos,
-                                Timestamp = DateTime.Now,
-                                Pressure = GetPressure(),
-                                IsPen = IsPenActive()
-                            };
-
-                            // Добавляем в очередь
-                            _pointQueue.Enqueue(point);
-
-                            // Интерполяция между точками
-                            if (lastPoint.HasValue)
-                            {
-                                AddInterpolatedPoints(lastPoint.Value, point);
-                            }
-
-                            lastPoint = point;
-                        }
-                    }
-                    else
-                    {
-                        lastPoint = null; // Сбрасываем при выходе за пределы
-                    }
-
-                    await Task.Delay(sleepTime, _cts.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[MouseInputService] Polling error: {ex.Message}");
-                    await Task.Delay(100); // Задержка при ошибке
-                }
-            }
-        }
-
-        // === ИНТЕРПОЛЯЦИЯ ===
-        private void AddInterpolatedPoints(MousePoint from, MousePoint to)
-        {
-            double distance = Math.Sqrt(
-                Math.Pow(to.Position.X - from.Position.X, 2) +
-                Math.Pow(to.Position.Y - from.Position.Y, 2));
-
-            // Интерполируем только если расстояние достаточно большое
-            if (distance > 3.0)
-            {
-                // Количество промежуточных точек зависит от расстояния
-                int steps = Math.Max(1, (int)(distance / 2.5));
-                steps = Math.Min(steps, 10); // Ограничиваем
-
-                double timeStep = (to.Timestamp - from.Timestamp).TotalMilliseconds / (steps + 1);
-                float pressureStep = (to.Pressure - from.Pressure) / (steps + 1);
-
-                for (int i = 1; i <= steps; i++)
-                {
-                    double t = i / (double)(steps + 1);
-
-                    var interpolated = new MousePoint
-                    {
-                        Position = new Point(
-                            from.Position.X + (to.Position.X - from.Position.X) * t,
-                            from.Position.Y + (to.Position.Y - from.Position.Y) * t),
-                        Timestamp = from.Timestamp.AddMilliseconds(timeStep * i),
-                        Pressure = from.Pressure + pressureStep * i,
-                        IsPen = from.IsPen && to.IsPen // Если оба точки от пера
-                    };
-
-                    _pointQueue.Enqueue(interpolated);
-                }
-            }
-        }
 
         // === ДИСПАТЧ СОБЫТИЙ ===
         private void DispatchPoints(object sender, EventArgs e)
         {
-            // Отправляем все накопленные точки
-            while (_pointQueue.TryDequeue(out var point))
+            var position = Mouse.GetPosition(_targetElement);
+            MousePoint mousePoint = new MousePoint()
             {
-                MouseMoved?.Invoke(point);
-            }
+                Position = position,
+                Pressure = GetPressure()
+            };
+            MouseMoved?.Invoke(mousePoint);
         }
 
         // === ОБРАБОТЧИКИ СОБЫТИЙ ЭЛЕМЕНТА ===

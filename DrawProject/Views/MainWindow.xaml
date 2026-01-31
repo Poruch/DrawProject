@@ -22,20 +22,34 @@
             <ToolBar DockPanel.Dock="Top">
                 <Button Content="Brush" Command="{Binding SelectBrushCommand}"/>
                 <Button Content="Easter" Command="{Binding SelectEraserCommand}"/>
+                <Button Content="Rectangle" Command="{Binding SelectRectangleCommand}"/>
                 <Button Content="Clear" Command= "{Binding ClearCommand}"/>
             </ToolBar>
 
             <StackPanel DockPanel.Dock="Left" Width="100">
-                <TextBlock Text="Colors:"/>
-                <Button Command="{Binding ChangeColorCommand}"
-                CommandParameter="{Binding Converter={StaticResource ColorConverter},
-                    ConverterParameter= Black}"
-                        Background="Black" Height="30"/>
-                <Button Command="{Binding ChangeColorCommand}"
-                            CommandParameter="{Binding Converter={StaticResource ColorConverter}, 
-                            ConverterParameter=Red}"
-                            Content="Red"
-                            Background="Red"/>
+
+
+                <!-- Цветовой круг -->
+                <Border BorderBrush="LightGray" BorderThickness="1" 
+                        Background="White" Margin="5" 
+                        HorizontalAlignment="Center" Height="177">
+                    <Viewbox Stretch="Uniform">
+                        <controls:ColorSlider x:Name="ColorSliders"
+                        ColorChangedCommand="{Binding ColorWheelChanged}"/>
+                    </Viewbox>
+                </Border>
+
+                <Slider Grid.Column="1" 
+                       x:Name="RedSlider"
+                       Minimum="0" Maximum="255" 
+                       Value="{Binding BrushSize, Mode=TwoWay}">
+                    <Slider.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="White" Offset="0"/>
+                            <GradientStop Color="Black" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Slider.Background>
+                </Slider>
             </StackPanel>
 
             <!-- Холст для рисования -->

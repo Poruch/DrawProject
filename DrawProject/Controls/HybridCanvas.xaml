@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:DrawProject.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Canvas x:Name="rootCanvas" Background="White">
+    <Canvas x:Name="rootCanvas" Background="White" MouseWheel="OnCanvasMouseWheel">
         <Rectangle x:Name="transparencyBackground">
             <Rectangle.Fill>
                 <VisualBrush TileMode="Tile" Viewport="0,0,10,10" 

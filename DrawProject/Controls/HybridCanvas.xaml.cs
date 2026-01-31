@@ -55,13 +55,16 @@ namespace DrawProject.Controls
         private Image _rasterImage;
         private Canvas _vectorOverlay;
         private bool _isDrawing = false;
-
+        private int BrushSize = 1;
         // === МНОГОПОТОЧНЫЕ ОЧЕРЕДИ ===
         private ConcurrentQueue<MousePoint> _inputQueue;  // Для ввода мыши
         private ConcurrentQueue<ProcessedPoint> _outputQueue; // Для рисования в UI
         private Task _processingTask;
         private CancellationTokenSource _cts;
         private DispatcherTimer _uiTimer;
+
+        private MousePoint? lastPoint = null;
+
 
         // Структуры данных
         private struct MousePoint
@@ -135,12 +138,13 @@ namespace DrawProject.Controls
         // === ФОНОВАЯ ОБРАБОТКА (отдельный поток!) ===
         private async Task ProcessPointsBackground(CancellationToken ct)
         {
-            MousePoint? lastPoint = null;
+
 
             while (!ct.IsCancellationRequested)
             {
                 try
                 {
+
                     // Обрабатываем все точки из входной очереди
                     while (_inputQueue.TryDequeue(out var currentPoint))
                     {
@@ -156,12 +160,10 @@ namespace DrawProject.Controls
                             Position = currentPoint.Position,
                             IsInterpolated = false
                         });
-
                         lastPoint = currentPoint;
                     }
-
                     // Короткая пауза чтобы не грузить CPU
-                    await Task.Delay(1, ct);
+                    //await Task.Delay(1, ct);
                 }
                 catch (OperationCanceledException)
                 {
@@ -185,9 +187,9 @@ namespace DrawProject.Controls
             double speed = distance / Math.Max(1, timeDiff);
 
             // Определяем нужно ли интерполировать
-            if (distance > 2.0 && speed > 2.0)
+            //if (distance > 2.0 && speed > 2.0)
             {
-                int steps = CalculateSteps(distance, speed);
+                int steps = CalculateSteps(distance, speed, BrushSize);
 
                 for (int i = 1; i < steps; i++)
                 {
@@ -205,16 +207,17 @@ namespace DrawProject.Controls
             }
         }
 
-        private int CalculateSteps(double distance, double speed)
+        private int CalculateSteps(double distance, double speed, int size)
         {
-            int steps = (int)(distance / Math.Max(1, (Brush?.Size ?? 10) * 0.3));
+            int steps = (int)(distance / Math.Max(1, size));
+            steps *= 2;
 
-            // Больше шагов при большей скорости
-            if (speed > 10) steps *= 2;
-            if (speed > 20) steps *= 3;
-
-            return Math.Clamp(steps, 1, 15);
+            return steps;
         }
+
+
+
+
 
         // === ОБРАБОТКА В UI ПОТОКЕ ===
         private void ProcessPointsInUI(object sender, EventArgs e)
@@ -223,7 +226,7 @@ namespace DrawProject.Controls
 
             // Обрабатываем до 20 точек за кадр
             int pointsProcessed = 0;
-            const int maxPointsPerFrame = 20;
+            const int maxPointsPerFrame = 40;
 
             while (pointsProcessed < maxPointsPerFrame &&
                    _outputQueue.TryDequeue(out var point))
@@ -235,25 +238,8 @@ namespace DrawProject.Controls
                 pointsProcessed++;
             }
 
-            // Автоматическая регулировка частоты
-            AdjustUITimer();
         }
 
-        private void AdjustUITimer()
-        {
-            if (_outputQueue.Count > 30)
-            {
-                _uiTimer.Interval = TimeSpan.FromMilliseconds(8); // 125 Гц
-            }
-            else if (_outputQueue.Count > 50)
-            {
-                _uiTimer.Interval = TimeSpan.FromMilliseconds(4); // 250 Гц
-            }
-            else
-            {
-                _uiTimer.Interval = TimeSpan.FromMilliseconds(16); // 60 Гц
-            }
-        }
 
         // === УПРАВЛЕНИЕ СОСТОЯНИЕМ ===
         private void OnMouseDown(object sender, MouseButtonEventArgs e)
@@ -276,7 +262,7 @@ namespace DrawProject.Controls
                 Position = point,
                 Timestamp = DateTime.Now
             });
-
+            BrushSize = Brush.Size;
             CaptureMouse();
         }
 
@@ -293,6 +279,8 @@ namespace DrawProject.Controls
             var context = new InstrumentContext(this, e, default);
             Tool?.OnMouseUp(context);
 
+            lastPoint = null;
+
             CommitDrawing();
         }
 
@@ -302,7 +290,7 @@ namespace DrawProject.Controls
             int attempts = 0;
             while ((_inputQueue.Count > 0 || _outputQueue.Count > 0) && attempts < 100)
             {
-                Thread.Sleep(1);
+                //Thread.Sleep(1);
                 ProcessPointsInUI(null, EventArgs.Empty);
                 attempts++;
             }
@@ -315,34 +303,89 @@ namespace DrawProject.Controls
             while (_outputQueue.TryDequeue(out _)) { }
         }
 
+        private void OnCanvasMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            e.Handled = true; // Запрещаем прокрутку
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         // === КОММИТ И ОЧИСТКА ===
         public void CommitDrawing()
         {
-            if (_vectorOverlay.Children.Count == 0 ||
-                Brush == null ||
-                ImageDocument?.ActiveLayer == null)
+            ClearQueues();
+            if (_vectorOverlay.Children.Count == 0)
+            {
+                ClearOverlay();
                 return;
-
-            try
-            {
-                var renderTarget = new RenderTargetBitmap(
-                    (int)_vectorOverlay.ActualWidth,
-                    (int)_vectorOverlay.ActualHeight,
-                    96, 96, PixelFormats.Pbgra32);
-
-                renderTarget.Render(_vectorOverlay);
-                ImageDocument.ApplyVectorLayer(renderTarget, Blend);
-                _rasterImage.Source = ImageDocument.GetCompositeImage();
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"CommitDrawing error: {ex.Message}");
-            }
-            finally
+
+            // Подготовка
+            _vectorOverlay.UpdateLayout();
+            Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
+
+            // Рендеринг
+            var bitmap = new RenderTargetBitmap(
+                (int)Math.Max(1, _vectorOverlay.ActualWidth),
+                (int)Math.Max(1, _vectorOverlay.ActualHeight),
+                96, 96, PixelFormats.Pbgra32);
+
+            bitmap.Render(_vectorOverlay);
+
+            // Применение
+            ImageDocument.ApplyVectorLayer(bitmap, Blend);
+            _rasterImage.Source = ImageDocument.GetCompositeImage();
+
+            bitmap.Freeze();
+            // Очистка
+            ClearOverlay();
+        }
+
+        private void ClearOverlay()
+        {
+            Dispatcher.BeginInvoke(() =>
             {
                 _vectorOverlay.Children.Clear();
                 Blend = true;
-            }
+            });
         }
 
         private void CleanupThreading()

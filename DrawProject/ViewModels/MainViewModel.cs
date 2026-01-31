@@ -1,5 +1,6 @@
 ﻿using System.Windows.Input;
 using System.Windows.Media;
+using DrawProject.Instruments;
 using DrawProject.Models;
 using DrawProject.Models.Instruments;
 
@@ -97,11 +98,12 @@ namespace DrawProject.ViewModels
         public ICommand SelectBrushCommand { get; }
         public ICommand SelectEraserCommand { get; }
 
-
-
+        public ICommand SelectRectangleCommand { get; }
+        public ICommand ColorWheelChanged { get; }
         //Список инструментов 
         BrushInstrument brushInstrument;
         Easter easter;
+        RectangleInstrument rectangleInstrument;
         // === КОНСТРУКТОР ===
         public MainViewModel()
         {
@@ -109,13 +111,16 @@ namespace DrawProject.ViewModels
 
             ClearCommand = new RelayCommand(ClearCanvas);
             ChangeColorCommand = new RelayCommand<Color>(ChangeColor);
+            ColorWheelChanged = new RelayCommand<Color>(OnColorChanged);
+
 
             SelectBrushCommand = new RelayCommand(BrushTool);
             SelectEraserCommand = new RelayCommand(EasterTool);
 
+            SelectRectangleCommand = new RelayCommand(RectangleTool);
             brushInstrument = new BrushInstrument();
             easter = new Easter();
-
+            rectangleInstrument = new RectangleInstrument();
 
             _activeTool = brushInstrument;
 
@@ -144,6 +149,17 @@ namespace DrawProject.ViewModels
         private void BrushTool()
         {
             ActiveTool = brushInstrument;
+        }
+
+        private void RectangleTool()
+        {
+            ActiveTool = rectangleInstrument;
+        }
+
+
+        private void OnColorChanged(Color color)
+        {
+            BrushColor = color;
         }
     }
 }
