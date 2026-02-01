@@ -24,6 +24,7 @@
                 <Button Content="Easter" Command="{Binding SelectEraserCommand}"/>
                 <Button Content="Rectangle" Command="{Binding SelectRectangleCommand}"/>
                 <Button Content="Clear" Command= "{Binding ClearCommand}"/>
+                <Button Content="Save" Command= "{Binding SaveCommand}"/>
             </ToolBar>
 
             <StackPanel DockPanel.Dock="Left" Width="100">
@@ -51,14 +52,13 @@
                     </Slider.Background>
                 </Slider>
             </StackPanel>
-
             <!-- Холст для рисования -->
             <controls:HybridCanvas x:Name="drawingCanvas" 
-                                ImageDocument="{Binding CurrentDoc}"
-                                    Brush="{Binding CurrentBrush}"
-                                    Tool ="{Binding ActiveTool}"
-                                    Width="701" 
-                                    Height="412" RenderTransformOrigin="0.5,0.5">
+                    ImageDocument="{Binding CurrentDoc}"
+                        Brush="{Binding CurrentBrush}"
+                        Tool ="{Binding ActiveTool}"                                  
+                        Width="708" 
+                        Height="408" >
             </controls:HybridCanvas>
         </DockPanel>
     </Grid>

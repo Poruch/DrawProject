@@ -50,16 +50,9 @@ namespace DrawProject.Models
             {
                 // Используем WritePixels для быстрой очистки
                 var clearPixels = new byte[_bufferSize];
-                for (int i = 0; i < clearPixels.Length; i += 4)
-                {
-                    clearPixels[i] = 255;     // B
-                    clearPixels[i + 1] = 255; // G
-                    clearPixels[i + 2] = 255; // R
-                    clearPixels[i + 3] = 255; // A
-                }
 
                 Bitmap.WritePixels(new Int32Rect(0, 0, Width, Height),
-                    clearPixels, _stride, 0);
+                     clearPixels, _stride, 0);
             }
             finally
             {

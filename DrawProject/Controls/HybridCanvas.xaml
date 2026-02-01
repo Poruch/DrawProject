@@ -6,24 +6,31 @@
              xmlns:local="clr-namespace:DrawProject.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Canvas x:Name="rootCanvas" Background="White" MouseWheel="OnCanvasMouseWheel">
-        <Rectangle x:Name="transparencyBackground">
-            <Rectangle.Fill>
-                <VisualBrush TileMode="Tile" Viewport="0,0,10,10" 
-                           ViewportUnits="Absolute">
-                    <VisualBrush.Visual>
-                        <Grid Width="20" Height="20">
-                            <Rectangle Fill="LightGray" Width="10" Height="10"/>
-                            <Rectangle Fill="White" Width="10" Height="10" 
-                                     Canvas.Left="10"/>
-                            <Rectangle Fill="White" Width="10" Height="10" 
-                                     Canvas.Top="10"/>
-                            <Rectangle Fill="LightGray" Width="10" Height="10" 
-                                     Canvas.Left="10" Canvas.Top="10"/>
-                        </Grid>
-                    </VisualBrush.Visual>
-                </VisualBrush>
-            </Rectangle.Fill>
-        </Rectangle>
-    </Canvas>
+    <UserControl.Resources>
+
+    </UserControl.Resources>
+    <Grid>
+        <Canvas x:Name="_transparencyCanvas" MouseWheel="OnCanvasMouseWheel">
+            <!-- 1. Фон (красный для теста) -->
+
+            <!-- Видно ли красный? -->
+            <!-- Установите Width и Height или привяжите к Canvas -->
+            <Rectangle Width="{Binding ActualWidth, ElementName=_transparencyCanvas}"
+                  Height="{Binding ActualHeight, ElementName=_transparencyCanvas}"
+                    Fill="{StaticResource CheckerboardBrush}">
+            </Rectangle>
+        </Canvas>
+
+        <!-- Слой 2: Растровое изображение -->
+        <Image x:Name="_rasterImage"
+               HorizontalAlignment="Left"
+               VerticalAlignment="Top"
+               Stretch="None"/>
+
+        <!-- Слой 3: Векторный слой (прозрачный) -->
+        <Canvas x:Name="_vectorOverlay"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="Transparent"/>
+    </Grid>
 </UserControl>

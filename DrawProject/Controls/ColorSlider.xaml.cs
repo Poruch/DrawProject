@@ -102,8 +102,24 @@ namespace DrawProject.Controls
             InitializeComponent();
             UpdatePreviewColor();
 
+            Loaded += ColorSlider_Loaded;
+        }
+        private void ColorSlider_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Инициализируем слайдеры из SelectedColor при загрузке
+            SyncSlidersFromColor();
         }
 
+        private void SyncSlidersFromColor()
+        {
+            // Устанавливаем значения слайдеров
+            if (RedSlider != null) RedSlider.Value = Red;
+            if (GreenSlider != null) GreenSlider.Value = Green;
+            if (BlueSlider != null) BlueSlider.Value = Blue;
+            if (AlphaSlider != null) AlphaSlider.Value = Alpha;
+
+            UpdatePreviewColor();
+        }
         private static void OnSelectedColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var control = (ColorSlider)d;

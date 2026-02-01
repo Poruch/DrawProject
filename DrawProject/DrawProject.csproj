@@ -9,7 +9,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\checkerboard.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Helpers\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\checkerboard.png" />
   </ItemGroup>
 
 </Project>

@@ -52,9 +52,8 @@ namespace DrawProject.Controls
         }
 
         // === ПОЛЯ ===
-        private Image _rasterImage;
-        private Canvas _vectorOverlay;
         private bool _isDrawing = false;
+        private bool isInitialize = false;
         private int BrushSize = 1;
         // === МНОГОПОТОЧНЫЕ ОЧЕРЕДИ ===
         private ConcurrentQueue<MousePoint> _inputQueue;  // Для ввода мыши
@@ -89,12 +88,17 @@ namespace DrawProject.Controls
 
         private void InitializeLayers()
         {
-            _rasterImage = new Image();
-            _vectorOverlay = new Canvas { Background = Brushes.Transparent };
 
-            rootCanvas.Children.Add(_rasterImage);
-            rootCanvas.Children.Add(_vectorOverlay);
+            // Получаем элементы из XAML
+            var mainGrid = this.Content as Grid;
+            if (mainGrid == null) return;
 
+            // Находим или создаем элементы
+            _rasterImage = mainGrid.FindName("_rasterImage") as Image;
+            _vectorOverlay = mainGrid.FindName("_vectorOverlay") as Canvas;
+            _transparencyCanvas = this.FindName("_transparencyCanvas") as Canvas;
+
+            // Подписка на события мыши на самом UserControl
             this.MouseLeftButtonDown += OnMouseDown;
             this.MouseMove += OnMouseMove;
             this.MouseLeftButtonUp += OnMouseUp;
@@ -419,10 +423,16 @@ namespace DrawProject.Controls
                 canvas.Width = newDoc.Width;
                 canvas.Height = newDoc.Height;
 
-                if (canvas.rootCanvas != null)
+                if (canvas._rasterImage != null)
                 {
-                    canvas.rootCanvas.Width = newDoc.Width;
-                    canvas.rootCanvas.Height = newDoc.Height;
+                    canvas._rasterImage.Width = newDoc.Width;
+                    canvas._rasterImage.Height = newDoc.Height;
+                }
+
+                if (canvas._transparencyCanvas != null)
+                {
+                    canvas._transparencyCanvas.Width = newDoc.Width;
+                    canvas._transparencyCanvas.Height = newDoc.Height;
                 }
 
                 canvas._vectorOverlay.Children.Clear();

@@ -3,6 +3,7 @@ using System.Windows.Media;
 using DrawProject.Instruments;
 using DrawProject.Models;
 using DrawProject.Models.Instruments;
+using DrawProject.Services;
 
 namespace DrawProject.ViewModels
 {
@@ -100,6 +101,8 @@ namespace DrawProject.ViewModels
 
         public ICommand SelectRectangleCommand { get; }
         public ICommand ColorWheelChanged { get; }
+
+        public ICommand SaveCommand { get; }
         //Список инструментов 
         BrushInstrument brushInstrument;
         Easter easter;
@@ -121,7 +124,7 @@ namespace DrawProject.ViewModels
             brushInstrument = new BrushInstrument();
             easter = new Easter();
             rectangleInstrument = new RectangleInstrument();
-
+            SaveCommand = new RelayCommand(SaveImage);
             _activeTool = brushInstrument;
 
             _brush.Color = Colors.Black;
@@ -160,6 +163,11 @@ namespace DrawProject.ViewModels
         private void OnColorChanged(Color color)
         {
             BrushColor = color;
+        }
+
+        private void SaveImage()
+        {
+            SaveService.SaveBitmapToPng(CurrentDoc.Bitmap);
         }
     }
 }

@@ -4,6 +4,10 @@
              xmlns:local="clr-namespace:DrawProject"
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
-
+        <ImageBrush x:Key="CheckerboardBrush"
+           TileMode="Tile"
+           Viewport="0,0,20,20"
+           ViewportUnits="Absolute"
+           ImageSource="pack://application:,,,/Resources/checkerboard.png"/>
     </Application.Resources>
 </Application>
