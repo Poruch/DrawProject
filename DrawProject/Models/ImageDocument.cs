@@ -7,10 +7,15 @@ namespace DrawProject.Models
     public class ImageDocument : IDisposable
     {
         // === ДАННЫЕ ИЗОБРАЖЕНИЯ ===
-        public WriteableBitmap Bitmap { get; private set; }
-        public WriteableBitmap ActiveLayer => Bitmap;
-        public int Width { get; }
-        public int Height { get; }
+        bool _wasChanged = false;
+        List<WriteableBitmap> _layers = new();
+        int _selectedLayerIndex = 0;
+
+        public WriteableBitmap ActiveLayer => _layers[SelectedLayerIndex];
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public bool WasChanged { get => _wasChanged; set => _wasChanged = value; }
+        public int SelectedLayerIndex { get => _selectedLayerIndex; set => _selectedLayerIndex = (int)Math.Clamp(value, 0, _layers.Count - 1); }
 
         // Предвычисленные значения
         private readonly int _stride;
@@ -32,37 +37,155 @@ namespace DrawProject.Models
             _vectorBuffer = new byte[_bufferSize];
             _rasterBuffer = new byte[_bufferSize]; // ← Кэшируем raster буфер
 
-            InitializeBitmap();
+            AddNewLayer();
         }
-
-        private void InitializeBitmap()
+        public void AddNewLayer()
         {
-            Bitmap = new WriteableBitmap(Width, Height, 96, 96,
-                PixelFormats.Pbgra32, null);
-            Clear();
+            _layers.Add(new WriteableBitmap(Width, Height, 96, 96,
+                PixelFormats.Pbgra32, null));
+            SelectedLayerIndex = _layers.Count - 1;
+        }
+        public void AddNewLayer(BitmapSource source)
+        {
+            AddNewLayer();
+            WriteableBitmap Bitmap = _layers[SelectedLayerIndex];
+            // Если размеры Bitmap не совпадают с источником, может понадобиться масштабирование
+            if (Bitmap.PixelWidth != source.PixelWidth || Bitmap.PixelHeight != source.PixelHeight)
+            {
+                // Масштабируем источник под размер Bitmap
+                var scaledSource = new TransformedBitmap(
+                    source,
+                    new ScaleTransform(
+                        (double)Bitmap.PixelWidth / source.PixelWidth,
+                        (double)Bitmap.PixelHeight / source.PixelHeight
+                    )
+                );
+
+                // Копируем пиксели из масштабированного источника
+                Bitmap.WritePixels(
+                    new Int32Rect(0, 0, Bitmap.PixelWidth, Bitmap.PixelHeight),
+                    GetPixelsFromBitmapSource(scaledSource),
+                    Bitmap.BackBufferStride,
+                    0
+                );
+            }
+            else
+            {
+                // Копируем пиксели напрямую
+                Bitmap.WritePixels(
+                    new Int32Rect(0, 0, source.PixelWidth, source.PixelHeight),
+                    GetPixelsFromBitmapSource(source),
+                    Bitmap.BackBufferStride,
+                    0
+                );
+            }
         }
 
         // === ОЧИСТКА ===
-        public void Clear()
+        public void ClearActiveLayer()
         {
-            Bitmap.Lock();
+            _layers[SelectedLayerIndex].Lock();
             try
             {
                 // Используем WritePixels для быстрой очистки
                 var clearPixels = new byte[_bufferSize];
 
-                Bitmap.WritePixels(new Int32Rect(0, 0, Width, Height),
-                     clearPixels, _stride, 0);
+                _layers[SelectedLayerIndex].WritePixels(new Int32Rect(0, 0, Width, Height),
+                        clearPixels, _stride, 0);
             }
             finally
             {
-                Bitmap.Unlock();
+                _layers[SelectedLayerIndex].Unlock();
             }
         }
 
+        public void ClearDocument()
+        {
+            SelectedLayerIndex = -1;
+            _layers.Clear();
+        }
+
+        public void CreateNewImage(BitmapSource source)
+        {
+            ClearDocument();
+            AddNewLayer(source);
+        }
+        public void CreateNewImage(int width, int height)
+        {
+            ClearDocument();
+            Width = width;
+            Height = height;
+        }
+        private byte[] GetPixelsFromBitmapSource(BitmapSource source)
+        {
+            int stride = (source.PixelWidth * source.Format.BitsPerPixel + 7) / 8;
+            byte[] pixels = new byte[source.PixelHeight * stride];
+            source.CopyPixels(pixels, stride, 0);
+            return pixels;
+        }
         public WriteableBitmap GetCompositeImage()
         {
-            return Bitmap;
+            if (_layers == null || _layers.Count == 0)
+                return null;
+
+            // Проверяем размер первого слоя (все слои одинакового размера)
+            int width = _layers[0].PixelWidth;
+            int height = _layers[0].PixelHeight;
+
+            // Создаем пустой WriteableBitmap для результата
+            WriteableBitmap result = new WriteableBitmap(
+                width,
+                height,
+                96, 96,
+                PixelFormats.Pbgra32,
+                null
+            );
+
+            int stride = width * 4; // 4 байта на пиксель для Pbgra32
+            byte[] resultPixels = new byte[height * stride];
+
+            // Накладываем все слои (от нижнего к верхнему)
+            foreach (var layer in _layers)
+            {
+                // Получаем пиксели слоя
+                byte[] layerPixels = new byte[height * stride];
+                layer.CopyPixels(layerPixels, stride, 0);
+
+                // Накладываем слой
+                BlendPixels(resultPixels, layerPixels);
+            }
+
+            // Записываем результат
+            result.WritePixels(
+                new Int32Rect(0, 0, width, height),
+                resultPixels,
+                stride,
+                0
+            );
+
+            return result;
+        }
+
+        // Простая функция наложения пикселей (альфа-блендинг)
+        private void BlendPixels(byte[] result, byte[] layer)
+        {
+            for (int i = 0; i < result.Length; i += 4)
+            {
+                // Получаем альфа-канал слоя (от 0 до 1)
+                float alpha = layer[i + 3] / 255f;
+
+                // Накладываем каждый цветовой канал
+                for (int channel = 0; channel < 3; channel++) // B, G, R
+                {
+                    result[i + channel] = (byte)(
+                        (layer[i + channel] * alpha) +
+                        (result[i + channel] * (1 - alpha))
+                    );
+                }
+
+                // Альфа-канал результата (максимальное значение)
+                result[i + 3] = Math.Max(result[i + 3], layer[i + 3]);
+            }
         }
 
         // === ПЕРЕНОС ВЕКТОРА В РАСТР ===
@@ -75,7 +198,7 @@ namespace DrawProject.Models
             vectorLayer.CopyPixels(_vectorBuffer, _stride, 0);
 
             // Копируем текущий Bitmap в кэшированный буфер
-            Bitmap.CopyPixels(_rasterBuffer, _stride, 0);
+            _layers[SelectedLayerIndex].CopyPixels(_rasterBuffer, _stride, 0);
 
             if (!isEraser)
             {
@@ -87,7 +210,7 @@ namespace DrawProject.Models
             }
 
             // Записываем обратно
-            Bitmap.WritePixels(new Int32Rect(0, 0, Width, Height),
+            _layers[SelectedLayerIndex].WritePixels(new Int32Rect(0, 0, Width, Height),
                 _rasterBuffer, _stride, 0);
 
         }
@@ -158,7 +281,7 @@ namespace DrawProject.Models
                 if (disposing)
                 {
                     // Освобождаем управляемые ресурсы
-                    Bitmap = null;
+                    ClearDocument();
                 }
                 _disposed = true;
             }

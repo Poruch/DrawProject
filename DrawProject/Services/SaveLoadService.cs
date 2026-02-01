@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows;
 using System.IO;
+using System.Windows.Media;
 
 namespace DrawProject.Services
 {
-    internal class SaveService
+    internal class SaveLoadService
     {
         public static bool SaveBitmapToPng(BitmapSource bitmap, Window parentWindow = null)
         {
@@ -94,6 +95,25 @@ namespace DrawProject.Services
             }
         }
 
+        public static BitmapSource OpenFileImage()
+        {
+            var openFileDialog = new OpenFileDialog()
+            {
+                Filter = "PNG Image|*.png|JPEG Image|*.jpg;*.jpeg|BMP Image|*.bmp|All Files|*.*",
+                FilterIndex = 1,
+                DefaultExt = ".png",
+                AddExtension = true,
+                Title = "Открыть изображение",
+            };
+
+            bool? result = openFileDialog.ShowDialog();
+
+            if (result == null || !result.Value)
+            {
+                return null;
+            }
+            return new BitmapImage(new Uri(openFileDialog.FileName));
+        }
 
 
     }

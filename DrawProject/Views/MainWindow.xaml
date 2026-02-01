@@ -8,7 +8,7 @@
         xmlns:converters="clr-namespace:DrawProject.Converters"
         xmlns:vm ="clr-namespace:DrawProject.ViewModels" 
     mc:Ignorable="d"
-        Title="MainWindow" Height="451" Width="804">
+        Title="MainWindow" Height="452" Width="834">
     <Window.DataContext>
         <vm:MainViewModel/>
     </Window.DataContext>
@@ -25,6 +25,12 @@
                 <Button Content="Rectangle" Command="{Binding SelectRectangleCommand}"/>
                 <Button Content="Clear" Command= "{Binding ClearCommand}"/>
                 <Button Content="Save" Command= "{Binding SaveCommand}"/>
+                <Button Content="Open" Command= "{Binding OpenCommand}"/>
+                <Button Content="Pipette" Command= "{Binding SelectPipetteCommand}"/>
+
+                <Button Content="NewLayer" Command= "{Binding AddLayerCommand}"/>
+                <Button Content="FirstLayer" Command= "{Binding ResetLayerCommand}"/>
+                <Button Content="NextLayer" Command= "{Binding UpLayerCommand}"/>
             </ToolBar>
 
             <StackPanel DockPanel.Dock="Left" Width="100">
@@ -53,16 +59,39 @@
                 </Slider>
             </StackPanel>
             <!-- Холст для рисования -->
-            <Border BorderBrush="LightGray" BorderThickness="1" 
-                    Background="White" Margin="5" Height="399">
+            <controls:ZoomBorder BorderBrush="LightGray" BorderThickness="1" 
+                    Background="White" Margin="5" Height="400" Width="612">
                 <Viewbox  Height="414" Width="700">
-                    <controls:HybridCanvas 
+                    <controls:HybridCanvas x:Name="drawingCanvas" 
+                                           Loaded="DrawingCanvas_Loaded"
                     ImageDocument="{Binding CurrentDoc}"
                         Brush="{Binding CurrentBrush}"
                         Tool="{Binding ActiveTool}"
-                        Width="1228" Height="924"/>
+                        Width="1237" Height="924"/>
                 </Viewbox>
-            </Border>
+            </controls:ZoomBorder>
+            <StackPanel DockPanel.Dock="Right" Width="100">
+
+
+                <!-- Цветовой круг -->
+                <Border BorderBrush="LightGray" BorderThickness="1" 
+            Background="White" Margin="5" 
+            HorizontalAlignment="Center" Height="177">
+                    <Viewbox Stretch="Uniform" RenderTransformOrigin="0.5,0.5" Width="105">
+                        <Viewbox.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform ScaleX="-1"/>
+                                <SkewTransform/>
+                                <RotateTransform/>
+                                <TranslateTransform/>
+                            </TransformGroup>
+                        </Viewbox.RenderTransform>
+
+                    </Viewbox>
+                </Border>
+
+
+            </StackPanel>
         </DockPanel>
     </Grid>
 </Window>

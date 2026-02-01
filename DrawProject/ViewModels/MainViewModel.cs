@@ -1,7 +1,9 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using DrawProject.Controls;
 using DrawProject.Instruments;
 using DrawProject.Models;
 using DrawProject.Models.Instruments;
@@ -13,6 +15,7 @@ namespace DrawProject.ViewModels
     {
         private Brush _brush = new Brush();
         private ImageDocument _currentDoc;
+        private HybridCanvas _drawingCanvas;
         private Tool _activeTool;
         public Tool ActiveTool
         {
@@ -105,14 +108,26 @@ namespace DrawProject.ViewModels
         public ICommand ColorWheelChanged { get; }
 
         public ICommand SaveCommand { get; }
+
+
+        public ICommand OpenCommand { get; }
+        public ICommand AddLayerCommand { get; }
+        public ICommand ResetLayerCommand { get; }
+        public ICommand UpLayerCommand { get; }
+        public ICommand SelectPipetteCommand { get; }
+        public HybridCanvas DrawingCanvas { get => _drawingCanvas; set => _drawingCanvas = value; }
+
+
+
         //Список инструментов 
         BrushInstrument brushInstrument;
         Easter easter;
         RectangleInstrument rectangleInstrument;
+        PipetteTool pipetteTool;
         // === КОНСТРУКТОР ===
         public MainViewModel()
         {
-            CurrentDoc = new ImageDocument(800, 600);
+            CurrentDoc = new ImageDocument(2000, 1500);
 
             ClearCommand = new RelayCommand(ClearCanvas);
             ChangeColorCommand = new RelayCommand<Color>(ChangeColor);
@@ -121,12 +136,20 @@ namespace DrawProject.ViewModels
 
             SelectBrushCommand = new RelayCommand(BrushTool);
             SelectEraserCommand = new RelayCommand(EasterTool);
-
             SelectRectangleCommand = new RelayCommand(RectangleTool);
+            SelectPipetteCommand = new RelayCommand(() => { ActiveTool = pipetteTool; });
+
+            SaveCommand = new RelayCommand(SaveImage);
+            OpenCommand = new RelayCommand(OpenImage);
+
+            AddLayerCommand = new RelayCommand(() => { CurrentDoc.AddNewLayer(); });
+            ResetLayerCommand = new RelayCommand(() => { CurrentDoc.SelectedLayerIndex = 0; });
+            UpLayerCommand = new RelayCommand(() => { CurrentDoc.SelectedLayerIndex++; });
+
             brushInstrument = new BrushInstrument();
             easter = new Easter();
             rectangleInstrument = new RectangleInstrument();
-            SaveCommand = new RelayCommand(SaveImage);
+            pipetteTool = new PipetteTool();
             _activeTool = brushInstrument;
 
             _brush.Color = Colors.Black;
@@ -139,7 +162,7 @@ namespace DrawProject.ViewModels
         // === МЕТОДЫ ===
         private void ClearCanvas()
         {
-            CurrentDoc.Clear();
+            CurrentDoc.ClearActiveLayer();
         }
 
         private void ChangeColor(Color color)
@@ -167,9 +190,24 @@ namespace DrawProject.ViewModels
             BrushColor = color;
         }
 
+        private void OpenImage()
+        {
+            var source = SaveLoadService.OpenFileImage();
+            if (source == null)
+            {
+                return;
+            }
+            CurrentDoc = new ImageDocument((int)source.Width, (int)source.Height);
+            CurrentDoc.CreateNewImage(source);
+            _drawingCanvas.CommitDrawing();
+            //_drawingCanvas.AddNewLayer(source);
+        }
+
+
+
         private void SaveImage()
         {
-            SaveService.SaveBitmapToPng(CurrentDoc.Bitmap);
+            SaveLoadService.SaveBitmapToPng(CurrentDoc.GetCompositeImage());
         }
     }
 }

@@ -28,6 +28,13 @@ namespace DrawProject
 
             //_drawingCanvas = FindName("drawingCanvas") as HybridCanvas;
         }
+        private void DrawingCanvas_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.DrawingCanvas = sender as HybridCanvas;
+            }
+        }
 
         private void MyColorWheel_ColorChanged(object sender, Color e)
         {

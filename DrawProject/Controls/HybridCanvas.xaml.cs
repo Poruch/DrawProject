@@ -214,7 +214,7 @@ namespace DrawProject.Controls
         private int CalculateSteps(double distance, double speed, int size)
         {
             int steps = (int)(distance / Math.Max(1, size));
-            steps *= 2;
+            steps = (int)(steps * 1.2);
 
             return steps;
         }
@@ -343,8 +343,11 @@ namespace DrawProject.Controls
 
 
 
-
-
+        public void AddNewLayer(BitmapSource source)
+        {
+            ImageDocument.CreateNewImage(source);
+            CommitDrawing();
+        }
 
 
 
@@ -356,7 +359,7 @@ namespace DrawProject.Controls
         public void CommitDrawing()
         {
             ClearQueues();
-            if (_vectorOverlay.Children.Count == 0)
+            if (_vectorOverlay.Children.Count == 0 && !ImageDocument.WasChanged)
             {
                 ClearOverlay();
                 return;
@@ -377,7 +380,7 @@ namespace DrawProject.Controls
             // Применение
             ImageDocument.ApplyVectorLayer(bitmap, Blend);
             _rasterImage.Source = ImageDocument.GetCompositeImage();
-
+            ImageDocument.WasChanged = false;
             bitmap.Freeze();
             // Очистка
             ClearOverlay();
@@ -459,7 +462,7 @@ namespace DrawProject.Controls
         {
             ClearQueues();
             _vectorOverlay.Children.Clear();
-            ImageDocument?.Clear();
+            ImageDocument?.ClearActiveLayer();
             _rasterImage.Source = ImageDocument?.GetCompositeImage();
         }
     }
