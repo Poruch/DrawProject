@@ -26,7 +26,7 @@ namespace DrawProject
 
             InitializeComponent();
 
-            _drawingCanvas = FindName("drawingCanvas") as HybridCanvas;
+            //_drawingCanvas = FindName("drawingCanvas") as HybridCanvas;
         }
 
         private void MyColorWheel_ColorChanged(object sender, Color e)

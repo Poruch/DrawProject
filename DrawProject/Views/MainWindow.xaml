@@ -53,13 +53,16 @@
                 </Slider>
             </StackPanel>
             <!-- Холст для рисования -->
-            <controls:HybridCanvas x:Name="drawingCanvas" 
+            <Border BorderBrush="LightGray" BorderThickness="1" 
+                    Background="White" Margin="5" Height="399">
+                <Viewbox  Height="414" Width="700">
+                    <controls:HybridCanvas 
                     ImageDocument="{Binding CurrentDoc}"
                         Brush="{Binding CurrentBrush}"
-                        Tool ="{Binding ActiveTool}"                                  
-                        Width="708" 
-                        Height="408" >
-            </controls:HybridCanvas>
+                        Tool="{Binding ActiveTool}"
+                        Width="1228" Height="924"/>
+                </Viewbox>
+            </Border>
         </DockPanel>
     </Grid>
 </Window>

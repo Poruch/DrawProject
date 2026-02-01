@@ -1,5 +1,7 @@
-﻿using System.Windows.Input;
+﻿using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using DrawProject.Instruments;
 using DrawProject.Models;
 using DrawProject.Models.Instruments;
@@ -110,7 +112,7 @@ namespace DrawProject.ViewModels
         // === КОНСТРУКТОР ===
         public MainViewModel()
         {
-            CurrentDoc = new ImageDocument(8000, 6000);
+            CurrentDoc = new ImageDocument(800, 600);
 
             ClearCommand = new RelayCommand(ClearCanvas);
             ChangeColorCommand = new RelayCommand<Color>(ChangeColor);
