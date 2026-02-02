@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Reflection.Emit;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -118,6 +120,8 @@ namespace DrawProject.ViewModels
 
 
         public ICommand OpenCommand { get; }
+        public ICommand CreateCommand { get; }
+        public ICommand SaveAsCommand { get; }
 
 
         public ICommand MoveLayerDownCommand { get; set; }
@@ -128,6 +132,175 @@ namespace DrawProject.ViewModels
         public ICommand AddLayerCommand { get; }
 
         public ICommand RemoveLayerCommand { get; }
+
+
+
+
+
+
+
+        public HybridCanvas DrawingCanvas { get => _drawingCanvas; set => _drawingCanvas = value; }
+
+        private ObservableCollection<Layer> _layers = new();
+
+        public ObservableCollection<Layer> Layers
+        {
+            get => _layers;
+            set
+            {
+                _layers = value;
+                OnPropertyChanged(nameof(Layers));
+            }
+        }
+        private int _selectedLayerIndex = 0;
+        public int SelectedLayerIndex
+        {
+            get => _selectedLayerIndex; set
+            {
+                CurrentDoc.SelectedLayerIndex = value;
+                _selectedLayerIndex = CurrentDoc.SelectedLayerIndex;
+                OnPropertyChanged(nameof(SelectedLayerIndex));
+            }
+        }
+        string currentPath = "";
+        //Список инструментов
+        BrushInstrument brushInstrument;
+        Easter easter;
+        RectangleInstrument rectangleInstrument;
+        PipetteTool pipetteTool;
+        // === КОНСТРУКТОР ===
+        public MainViewModel()
+        {
+
+            //CurrentDoc = new ImageDocument(1, 1);
+
+            brushInstrument = new BrushInstrument();
+            easter = new Easter();
+            rectangleInstrument = new RectangleInstrument();
+            pipetteTool = new PipetteTool();
+            _activeTool = brushInstrument;
+
+
+            ClearCommand = new RelayCommand(ClearCanvas);
+            ChangeColorCommand = new RelayCommand<Color>(ChangeColor);
+            ColorWheelChanged = new RelayCommand<Color>(OnColorChanged);
+
+
+            SelectBrushCommand = new RelayCommand(BrushTool);
+            SelectEraserCommand = new RelayCommand(EasterTool);
+            SelectRectangleCommand = new RelayCommand(RectangleTool);
+            SelectPipetteCommand = new RelayCommand(() => { ActiveTool = pipetteTool; });
+
+            SaveCommand = new RelayCommand(SaveImage);
+            OpenCommand = new RelayCommand(OpenImage);
+            SaveAsCommand = new RelayCommand(SaveAs);
+            CreateCommand = new RelayCommand(OpenCreateContext);
+
+            AddLayerCommand = new RelayCommand(AddLayer);
+            RemoveLayerCommand = new RelayCommand(RemoveLayer);
+            MoveLayerUpCommand = new RelayCommand<Layer>(MoveLayerUp);
+            MoveLayerDownCommand = new RelayCommand<Layer>(MoveLayerDown);
+
+
+            _brush.Color = Colors.Black;
+            _brush.Size = 5;
+            _brush.Opacity = 1.0f;
+            _brush.Hardness = 0.5f;
+            _brush.Shape = new SquareBrushShape();
+        }
+
+        // === МЕТОДЫ ===
+        private void ClearCanvas()
+        {
+            CurrentDoc.ClearActiveLayer();
+        }
+
+        private void ChangeColor(Color color)
+        {
+            BrushColor = color;
+        }
+
+        private void EasterTool()
+        {
+            ActiveTool = easter;
+        }
+        private void BrushTool()
+        {
+            ActiveTool = brushInstrument;
+        }
+
+        private void RectangleTool()
+        {
+            ActiveTool = rectangleInstrument;
+        }
+
+
+        private void OnColorChanged(Color color)
+        {
+            BrushColor = color;
+        }
+
+        private void OpenCreateContext()
+        {
+            CreateDocument(200, 200);
+        }
+        private void CreateDocument(int width, int height)
+        {
+            CurrentDoc = new ImageDocument(width, height);
+        }
+        private void OpenImage()
+        {
+            var source = FileService.OpenFileImage();
+            if (source == null)
+            {
+                return;
+            }
+            CreateDocument((int)source.Width, (int)source.Height);
+            CurrentDoc.CreateNewImage(source);
+            _drawingCanvas.CommitDrawing();
+            CurrentDoc.WasChanged = true;
+            DrawingCanvas.CommitDrawing();
+        }
+
+
+
+        private void SaveImage()
+        {
+            if (CurrentDoc == null) return;
+
+
+            if (currentPath == "")
+            {
+                currentPath = FileService.GetPath();
+                if (currentPath != "")
+                {
+                    try
+                    {
+                        FileService.SaveBitmapToFile(CurrentDoc.GetCompositeImage(), currentPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                    }
+                }
+            }
+            else
+            {
+                FileService.SaveBitmapToFile(CurrentDoc.GetCompositeImage(), currentPath);
+            }
+            CurrentDoc.IsUnSaved = false;
+
+        }
+
+        private void SaveAs()
+        {
+            if (CurrentDoc == null) return;
+
+            FileService.SaveBitmapToPng(CurrentDoc.GetCompositeImage());
+            CurrentDoc.IsUnSaved = false;
+        }
+
+
 
         private void RemoveLayer()
         {
@@ -199,132 +372,6 @@ namespace DrawProject.ViewModels
             CurrentDoc.AddNewLayer();
             _selectedLayerIndex = CurrentDoc.SelectedLayerIndex;
             OnPropertyChanged(nameof(SelectedLayerIndex));
-        }
-
-
-
-
-
-        public HybridCanvas DrawingCanvas { get => _drawingCanvas; set => _drawingCanvas = value; }
-
-        private ObservableCollection<Layer> _layers = new();
-
-        public ObservableCollection<Layer> Layers
-        {
-            get => _layers;
-            set
-            {
-                _layers = value;
-                OnPropertyChanged(nameof(Layers));
-            }
-        }
-        private int _selectedLayerIndex = 0;
-        public int SelectedLayerIndex
-        {
-            get => _selectedLayerIndex; set
-            {
-                CurrentDoc.SelectedLayerIndex = value;
-                _selectedLayerIndex = CurrentDoc.SelectedLayerIndex;
-                OnPropertyChanged(nameof(SelectedLayerIndex));
-            }
-        }
-        string currentPath = "";
-        //Список инструментов
-        BrushInstrument brushInstrument;
-        Easter easter;
-        RectangleInstrument rectangleInstrument;
-        PipetteTool pipetteTool;
-        // === КОНСТРУКТОР ===
-        public MainViewModel()
-        {
-
-            //CurrentDoc = new ImageDocument(1, 1);
-
-            brushInstrument = new BrushInstrument();
-            easter = new Easter();
-            rectangleInstrument = new RectangleInstrument();
-            pipetteTool = new PipetteTool();
-            _activeTool = brushInstrument;
-
-
-            ClearCommand = new RelayCommand(ClearCanvas);
-            ChangeColorCommand = new RelayCommand<Color>(ChangeColor);
-            ColorWheelChanged = new RelayCommand<Color>(OnColorChanged);
-
-
-            SelectBrushCommand = new RelayCommand(BrushTool);
-            SelectEraserCommand = new RelayCommand(EasterTool);
-            SelectRectangleCommand = new RelayCommand(RectangleTool);
-            SelectPipetteCommand = new RelayCommand(() => { ActiveTool = pipetteTool; });
-
-            SaveCommand = new RelayCommand(SaveImage);
-            OpenCommand = new RelayCommand(OpenImage);
-
-            AddLayerCommand = new RelayCommand(AddLayer);
-            RemoveLayerCommand = new RelayCommand(RemoveLayer);
-            MoveLayerUpCommand = new RelayCommand<Layer>(MoveLayerUp);
-            MoveLayerDownCommand = new RelayCommand<Layer>(MoveLayerDown);
-
-
-            _brush.Color = Colors.Black;
-            _brush.Size = 5;
-            _brush.Opacity = 1.0f;
-            _brush.Hardness = 0.5f;
-            _brush.Shape = new SquareBrushShape();
-        }
-
-        // === МЕТОДЫ ===
-        private void ClearCanvas()
-        {
-            CurrentDoc.ClearActiveLayer();
-        }
-
-        private void ChangeColor(Color color)
-        {
-            BrushColor = color;
-        }
-
-        private void EasterTool()
-        {
-            ActiveTool = easter;
-        }
-        private void BrushTool()
-        {
-            ActiveTool = brushInstrument;
-        }
-
-        private void RectangleTool()
-        {
-            ActiveTool = rectangleInstrument;
-        }
-
-
-        private void OnColorChanged(Color color)
-        {
-            BrushColor = color;
-        }
-        private void CreateDocument(int width, int height)
-        {
-            CurrentDoc = new ImageDocument(width, height);
-        }
-        private void OpenImage()
-        {
-            var source = SaveLoadService.OpenFileImage();
-            if (source == null)
-            {
-                return;
-            }
-            CreateDocument((int)source.Width, (int)source.Height);
-            CurrentDoc.CreateNewImage(source);
-            _drawingCanvas.CommitDrawing();
-            //_drawingCanvas.AddNewLayer(source);
-        }
-
-
-
-        private void SaveImage()
-        {
-            SaveLoadService.SaveBitmapToPng(CurrentDoc.GetCompositeImage());
         }
     }
 }

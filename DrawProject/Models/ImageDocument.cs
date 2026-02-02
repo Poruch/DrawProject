@@ -13,12 +13,14 @@ namespace DrawProject.Models
         public ObservableCollection<Layer> GetLayers => _layers;
         int _selectedLayerIndex = 0;
 
+        private bool isUnSaved = false;
         public WriteableBitmap ActiveSource => SelectedLayerIndex >= 0 ? _layers[SelectedLayerIndex].Source : null;
         public Layer SelectedLayer => SelectedLayerIndex >= 0 ? _layers[SelectedLayerIndex] : null;
         public int Width { get; private set; }
         public int Height { get; private set; }
         public bool WasChanged { get => _wasChanged; set => _wasChanged = value; }
         public int SelectedLayerIndex { get => _selectedLayerIndex; set => _selectedLayerIndex = (int)Math.Clamp(value, -1, _layers.Count - 1); }
+        public bool IsUnSaved { get => isUnSaved; set => isUnSaved = value; }
 
         // Предвычисленные значения
         private readonly int _stride;
@@ -92,13 +94,14 @@ namespace DrawProject.Models
 
             _layers[SelectedLayerIndex].Source.WritePixels(new Int32Rect(0, 0, Width, Height),
                     clearPixels, _stride, 0);
-
+            isUnSaved = true;
         }
 
         public void ClearDocument()
         {
             SelectedLayerIndex = -1;
             _layers.Clear();
+            isUnSaved = true;
         }
 
         public void CreateNewImage(BitmapSource source)
@@ -182,6 +185,7 @@ namespace DrawProject.Models
                 // Альфа-канал результата (максимальное значение)
                 result[i + 3] = Math.Max(result[i + 3], layer[i + 3]);
             }
+            isUnSaved = true;
         }
 
         // === ПЕРЕНОС ВЕКТОРА В РАСТР ===
@@ -208,7 +212,7 @@ namespace DrawProject.Models
             // Записываем обратно
             _layers[SelectedLayerIndex].UpdatePixels(new Int32Rect(0, 0, Width, Height),
                 _rasterBuffer, _stride);
-
+            isUnSaved = true;
         }
 
         private void ApplyBrush(byte[] rasterPixels, byte[] vectorPixels)
@@ -244,6 +248,7 @@ namespace DrawProject.Models
                     }
                 }
             }
+            isUnSaved = true;
         }
 
         private void ApplyEraser(byte[] rasterPixels, byte[] vectorPixels)
@@ -258,6 +263,7 @@ namespace DrawProject.Models
                     rasterPixels[i + 3] = 0;
                 }
             }
+            isUnSaved = true;
         }
 
 

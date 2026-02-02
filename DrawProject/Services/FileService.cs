@@ -11,8 +11,40 @@ using System.Windows.Media;
 
 namespace DrawProject.Services
 {
-    internal class SaveLoadService
+    internal class FileService
     {
+        static public string GetPath()
+        {
+            try
+            {
+                // Создаем диалог сохранения файла
+                var saveFileDialog = new SaveFileDialog
+                {
+                    Filter = "PNG Image|*.png|JPEG Image|*.jpg;*.jpeg|BMP Image|*.bmp|All Files|*.*",
+                    FilterIndex = 1,
+                    DefaultExt = ".png",
+                    AddExtension = true,
+                    Title = "выбрать путь",
+                    FileName = $"drawing_{DateTime.Now:yyyyMMdd_HHmmss}.png"
+                };
+
+                // Показываем диалог
+                bool result = saveFileDialog.ShowDialog() ?? false;
+
+                if (result == true)
+                {
+                    // Сохраняем в выбранном формате
+                    return saveFileDialog.FileName;
+                }
+                return "";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return "";
+            }
+        }
         public static bool SaveBitmapToPng(BitmapSource bitmap, Window parentWindow = null)
         {
             if (bitmap == null)
@@ -61,7 +93,7 @@ namespace DrawProject.Services
         /// <summary>
         /// Сохраняет BitmapSource в файл
         /// </summary>
-        private static bool SaveBitmapToFile(BitmapSource bitmap, string filePath)
+        public static bool SaveBitmapToFile(BitmapSource bitmap, string filePath)
         {
             try
             {

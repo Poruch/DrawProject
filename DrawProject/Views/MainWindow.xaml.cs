@@ -1,5 +1,8 @@
 ﻿using DrawProject.Controls;
 using DrawProject.ViewModels;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Media;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,7 +28,7 @@ namespace DrawProject
             //DataContext = new MainViewModel();
 
             InitializeComponent();
-
+            Closing += MainWindow_Closing;
             //_drawingCanvas = FindName("drawingCanvas") as HybridCanvas;
         }
         private void DrawingCanvas_Loaded(object sender, RoutedEventArgs e)
@@ -35,7 +38,48 @@ namespace DrawProject
                 viewModel.DrawingCanvas = sender as HybridCanvas;
             }
         }
+        private void MainWindow_Closing(object sender, CancelEventArgs e)
+        {
+            var doc = (DataContext as MainViewModel).CurrentDoc;
+            // Проверяем, есть ли несохраненные изменения
+            if (doc != null && doc.IsUnSaved)
+            {
+                // Проигрываем звук предупреждения
+                SystemSounds.Exclamation.Play();
 
+                // Показываем диалог
+                MessageBoxResult result = MessageBox.Show(
+                    "У вас есть несохраненные изменения. Сохранить перед выходом?",
+                    "Подтверждение выхода",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Warning);
+
+                switch (result)
+                {
+                    case MessageBoxResult.Yes:
+                        // Сохранить и выйти
+                        try
+                        {
+                            (DataContext as MainViewModel).SaveCommand.Execute(null);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex);
+                            e.Cancel = true;
+                        }
+                        break;
+
+                    case MessageBoxResult.No:
+                        // Выйти без сохранения
+                        break;
+
+                    case MessageBoxResult.Cancel:
+                        // Отменить закрытие
+                        e.Cancel = true;
+                        break;
+                }
+            }
+        }
         private void MyColorWheel_ColorChanged(object sender, Color e)
         {
 

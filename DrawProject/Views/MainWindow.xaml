@@ -34,9 +34,10 @@
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                     <Menu>
                         <MenuItem Header="File">
+                            <MenuItem Command="{Binding CreateCommand}" Header="Create" />
                             <MenuItem Command="{Binding OpenCommand}" Header="Open" />
                             <MenuItem Command="{Binding SaveCommand}" Header="Save" />
-                            <MenuItem Command="{Binding SaveCommand}" Header="Save as" />
+                            <MenuItem Command="{Binding SaveAsCommand}" Header="Save as" />
                             <Separator />
                             <MenuItem Header="Exit" />
                         </MenuItem>
@@ -147,8 +148,6 @@
                 BorderThickness="1">
                 <controls:ZoomBorder
                     x:Name="zoomBorder"
-                    Width="{Binding CurrentDoc.Width}"
-                    Height="{Binding CurrentDoc.Height}"
                     Background="White">
                     <controls:HybridCanvas
                         x:Name="drawingCanvas"
