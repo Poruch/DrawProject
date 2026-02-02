@@ -369,6 +369,7 @@ namespace DrawProject.ViewModels
         private void AddLayer()
         {
             // Создаем новый слой
+            if (CurrentDoc == null) return;
             CurrentDoc.AddNewLayer();
             _selectedLayerIndex = CurrentDoc.SelectedLayerIndex;
             OnPropertyChanged(nameof(SelectedLayerIndex));

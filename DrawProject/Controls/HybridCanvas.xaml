@@ -12,8 +12,8 @@
     <Grid>
         <Canvas
             x:Name="_transparencyCanvas"
-            Width="{Binding ImageDocument.Width}"
-            Height="{Binding ImageDocument.Height}"
+            Width="{Binding ImageDocument.Width, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Height="{Binding ImageDocument.Height, RelativeSource={RelativeSource AncestorType=UserControl}}"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             MouseWheel="OnCanvasMouseWheel">
@@ -22,9 +22,7 @@
             <!--  Видно ли красный?  -->
             <!--  Установите Width и Height или привяжите к Canvas  -->
             <Rectangle
-                Width="{Binding ImageDocument.Width}"
-                Height="{Binding ImageDocument.Height}"
-                HorizontalAlignment="Center"
+                HorizontalAlignment="Stretch"
                 VerticalAlignment="Center"
                 Fill="{StaticResource CheckerboardBrush}" />
         </Canvas>

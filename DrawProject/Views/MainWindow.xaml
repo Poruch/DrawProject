@@ -148,7 +148,9 @@
                 BorderThickness="1">
                 <controls:ZoomBorder
                     x:Name="zoomBorder"
-                    Background="White">
+                    Width="{Binding CurrentDoc.Width}"
+                    Height="{Binding CurrentDoc.Height}"
+                    Background="Transparent">
                     <controls:HybridCanvas
                         x:Name="drawingCanvas"
                         Width="{Binding CurrentDoc.Width}"
