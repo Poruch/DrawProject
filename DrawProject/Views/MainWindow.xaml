@@ -1,97 +1,330 @@
-﻿<Window x:Class="DrawProject.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:controls="clr-namespace:DrawProject.Controls"
-        xmlns:local="clr-namespace:DrawProject"
-        xmlns:converters="clr-namespace:DrawProject.Converters"
-        xmlns:vm ="clr-namespace:DrawProject.ViewModels" 
-    mc:Ignorable="d"
-        Title="MainWindow" Height="452" Width="834">
+﻿<Window
+    x:Class="DrawProject.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:DrawProject.Controls"
+    xmlns:converters="clr-namespace:DrawProject.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:DrawProject"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:DrawProject.ViewModels"
+    Title="MainWindow"
+    Width="834"
+    Height="452"
+    mc:Ignorable="d">
     <Window.DataContext>
-        <vm:MainViewModel/>
+        <vm:MainViewModel />
     </Window.DataContext>
     <Window.Resources>
-        <converters:ColorConverter x:Key="ColorConverter"/>
+        <converters:ColorConverter x:Key="ColorConverter" />
+        <converters:ObjectToBoolConverter x:Key="ObjectToBoolConverter" />
     </Window.Resources>
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <!--  Панель инструментов  -->
+            <RowDefinition Height="*" />
+            <!--  Основное содержимое  -->
+        </Grid.RowDefinitions>
 
-        <DockPanel>
-            <!-- Панель инструментов -->
-            <ToolBar DockPanel.Dock="Top">
-                <Button Content="Brush" Command="{Binding SelectBrushCommand}"/>
-                <Button Content="Easter" Command="{Binding SelectEraserCommand}"/>
-                <Button Content="Rectangle" Command="{Binding SelectRectangleCommand}"/>
-                <Button Content="Clear" Command= "{Binding ClearCommand}"/>
-                <Button Content="Save" Command= "{Binding SaveCommand}"/>
-                <Button Content="Open" Command= "{Binding OpenCommand}"/>
-                <Button Content="Pipette" Command= "{Binding SelectPipetteCommand}"/>
+        <!--  Панель инструментов  -->
+        <ToolBar Grid.Row="0" Background="#F0F0F0">
+            <DockPanel>
+                <!--  Левая часть: меню  -->
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <Menu>
+                        <MenuItem Header="File">
+                            <MenuItem Command="{Binding OpenCommand}" Header="Open" />
+                            <MenuItem Command="{Binding SaveCommand}" Header="Save" />
+                            <MenuItem Command="{Binding SaveCommand}" Header="Save as" />
+                            <Separator />
+                            <MenuItem Header="Exit" />
+                        </MenuItem>
+                    </Menu>
 
-                <Button Content="NewLayer" Command= "{Binding AddLayerCommand}"/>
-                <Button Content="FirstLayer" Command= "{Binding ResetLayerCommand}"/>
-                <Button Content="NextLayer" Command= "{Binding UpLayerCommand}"/>
-            </ToolBar>
+                    <Menu>
+                        <MenuItem Header="Tools">
+                            <MenuItem Command="{Binding SelectBrushCommand}" Header="Brush" />
+                            <MenuItem Command="{Binding SelectEraserCommand}" Header="Eraser" />
+                            <MenuItem Command="{Binding SelectRectangleCommand}" Header="Rectangle" />
+                            <MenuItem Command="{Binding SelectPipetteCommand}" Header="Pipette" />
+                        </MenuItem>
+                    </Menu>
 
-            <StackPanel DockPanel.Dock="Left" Width="100">
+                    <Menu>
+                        <MenuItem Header="Layers">
+                            <MenuItem Command="{Binding ClearCommand}" Header="Clear" />
+                        </MenuItem>
+                    </Menu>
+                </StackPanel>
 
+                <!--  Правая часть (если нужны дополнительные кнопки)  -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <!--  Можно добавить кнопки настроек и т.д.  -->
+                </StackPanel>
+            </DockPanel>
+        </ToolBar>
 
-                <!-- Цветовой круг -->
-                <Border BorderBrush="LightGray" BorderThickness="1" 
-                        Background="White" Margin="5" 
-                        HorizontalAlignment="Center" Height="177">
-                    <Viewbox Stretch="Uniform">
-                        <controls:ColorSlider x:Name="ColorSliders"
-                        ColorChangedCommand="{Binding ColorWheelChanged}"/>
-                    </Viewbox>
-                </Border>
+        <!--  Основное содержимое  -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="120" MinWidth="100" />
+                <!--  Левая панель  -->
+                <ColumnDefinition Width="*" />
+                <!--  Центр: холст  -->
+                <ColumnDefinition Width="150" MinWidth="120" />
+                <!--  Правая панель  -->
+            </Grid.ColumnDefinitions>
 
-                <Slider Grid.Column="1" 
-                       x:Name="RedSlider"
-                       Minimum="0" Maximum="255" 
-                       Value="{Binding BrushSize, Mode=TwoWay}">
-                    <Slider.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                            <GradientStop Color="White" Offset="0"/>
-                            <GradientStop Color="Black" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Slider.Background>
-                </Slider>
-            </StackPanel>
-            <!-- Холст для рисования -->
-            <controls:ZoomBorder BorderBrush="LightGray" BorderThickness="1" 
-                    Background="White" Margin="5" Height="400" Width="612">
-                <Viewbox  Height="414" Width="700">
-                    <controls:HybridCanvas x:Name="drawingCanvas" 
-                                           Loaded="DrawingCanvas_Loaded"
-                    ImageDocument="{Binding CurrentDoc}"
+            <!--  Левая панель инструментов  -->
+            <ScrollViewer
+                Grid.Column="0"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="5">
+                    <!--  Цветовые вкладки  -->
+                    <Border
+                        Margin="0,0,0,10"
+                        Background="White"
+                        BorderBrush="LightGray"
+                        BorderThickness="1"
+                        CornerRadius="3">
+                        <TabControl BorderThickness="0" TabStripPlacement="Top">
+                            <TabItem Header="RGBA">
+                                <Border Padding="5">
+                                    <Viewbox Stretch="Uniform">
+                                        <controls:ColorSlider x:Name="ColorSliders" ColorChangedCommand="{Binding ColorWheelChanged}" />
+                                    </Viewbox>
+                                </Border>
+                            </TabItem>
+                            <TabItem Header="HSL">
+                                <Border Padding="5">
+                                    <Viewbox Stretch="Uniform">
+                                        <controls:ColorSlider ColorChangedCommand="{Binding ColorWheelChanged}" />
+                                    </Viewbox>
+                                </Border>
+                            </TabItem>
+                        </TabControl>
+                    </Border>
+
+                    <!--  Размер кисти  -->
+                    <Border
+                        Padding="10,5"
+                        Background="White"
+                        BorderBrush="LightGray"
+                        BorderThickness="1"
+                        CornerRadius="3">
+                        <StackPanel>
+                            <TextBlock Margin="0,0,0,5" Text="Brush size:" />
+                            <Slider
+                                Maximum="100"
+                                Minimum="1"
+                                TickFrequency="5"
+                                TickPlacement="BottomRight"
+                                Value="{Binding BrushSize, Mode=TwoWay}">
+                                <Slider.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                        <GradientStop Offset="0" Color="White" />
+                                        <GradientStop Offset="1" Color="Black" />
+                                    </LinearGradientBrush>
+                                </Slider.Background>
+                            </Slider>
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Text="{Binding BrushSize, StringFormat={}{0:F0}}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!--  Центральная область: холст  -->
+            <Border
+                Grid.Column="1"
+                Margin="5"
+                Background="#F8F8F8"
+                BorderBrush="LightGray"
+                BorderThickness="1">
+                <controls:ZoomBorder
+                    x:Name="zoomBorder"
+                    Width="{Binding CurrentDoc.Width}"
+                    Height="{Binding CurrentDoc.Height}"
+                    Background="White">
+                    <controls:HybridCanvas
+                        x:Name="drawingCanvas"
+                        Width="{Binding CurrentDoc.Width}"
+                        Height="{Binding CurrentDoc.Height}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
                         Brush="{Binding CurrentBrush}"
-                        Tool="{Binding ActiveTool}"
-                        Width="1237" Height="924"/>
-                </Viewbox>
-            </controls:ZoomBorder>
-            <StackPanel DockPanel.Dock="Right" Width="100">
+                        ImageDocument="{Binding CurrentDoc}"
+                        Loaded="DrawingCanvas_Loaded"
+                        Tool="{Binding ActiveTool}" />
+                </controls:ZoomBorder>
+            </Border>
 
+            <!--  Правая панель: слои  -->
+            <Border
+                Grid.Column="2"
+                Margin="5"
+                Background="White"
+                BorderBrush="LightGray"
+                BorderThickness="1">
+                <DockPanel>
+                    <!--  Заголовок панели слоев  -->
+                    <Border
+                        Padding="10,5"
+                        Background="#F0F0F0"
+                        BorderBrush="LightGray"
+                        BorderThickness="0,0,0,1"
+                        DockPanel.Dock="Top">
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            FontWeight="Bold"
+                            Text="Layers" />
+                    </Border>
 
-                <!-- Цветовой круг -->
-                <Border BorderBrush="LightGray" BorderThickness="1" 
-            Background="White" Margin="5" 
-            HorizontalAlignment="Center" Height="177">
-                    <Viewbox Stretch="Uniform" RenderTransformOrigin="0.5,0.5" Width="105">
-                        <Viewbox.RenderTransform>
-                            <TransformGroup>
-                                <ScaleTransform ScaleX="-1"/>
-                                <SkewTransform/>
-                                <RotateTransform/>
-                                <TranslateTransform/>
-                            </TransformGroup>
-                        </Viewbox.RenderTransform>
+                    <!--  Кнопки управления слоями  -->
+                    <StackPanel
+                        Margin="5"
+                        HorizontalAlignment="Center"
+                        DockPanel.Dock="Bottom"
+                        Orientation="Horizontal">
+                        <Button
+                            Width="30"
+                            Command="{Binding AddLayerCommand}"
+                            Content="+"
+                            ToolTip="Add new layer" />
+                        <Button
+                            Width="30"
+                            Margin="5,0,0,0"
+                            Command="{Binding RemoveLayerCommand}"
+                            Content="-"
+                            ToolTip="Remove selected layer" />
+                    </StackPanel>
 
-                    </Viewbox>
-                </Border>
+                    <!--  Список слоев  -->
+                    <ListBox
+                        x:Name="layersListBox"
+                        BorderThickness="0"
+                        ItemsSource="{Binding Layers}"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        SelectedIndex="{Binding SelectedLayerIndex}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border
+                                    Margin="2"
+                                    Padding="3"
+                                    Background="Transparent"
+                                    CornerRadius="3">
+                                    <DockPanel Height="40">
+                                        <!--  Миниатюра слоя  -->
+                                        <Border
+                                            Width="30"
+                                            Height="30"
+                                            Margin="0,0,5,0"
+                                            BorderBrush="#CCCCCC"
+                                            BorderThickness="1"
+                                            CornerRadius="3"
+                                            DockPanel.Dock="Left">
 
+                                            <Grid>
+                                                <!--  Фон  -->
+                                                <Rectangle Fill="White" />
 
-            </StackPanel>
-        </DockPanel>
+                                                <!--  Изображение из Source  -->
+                                                <Image Source="{Binding Source}" Stretch="UniformToFill" />
+
+                                                <!--  Текст IMG  -->
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="9"
+                                                    Foreground="Gray"
+                                                    Text="IMG"
+                                                    Visibility="{Binding Source, Converter={StaticResource ObjectToBoolConverter}}" />
+                                            </Grid>
+                                        </Border>
+
+                                        <!--  Название слоя  -->
+                                        <Button
+                                            Padding="5,0"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Command="{Binding DataContext.SelectLayerCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                            CommandParameter="{Binding}"
+                                            Content="{Binding Name}">
+                                            <Button.Style>
+                                                <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border Background="Transparent" CornerRadius="2">
+                                                                    <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" />
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter Property="Background" Value="#F0F0F0" />
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!--  Кнопки управления  -->
+                                        <StackPanel
+                                            Width="25"
+                                            DockPanel.Dock="Right"
+                                            Orientation="Vertical">
+                                            <Button
+                                                Height="15"
+                                                Command="{Binding DataContext.MoveLayerUpCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                CommandParameter="{Binding}"
+                                                Content="↑"
+                                                FontSize="8"
+                                                ToolTip="Move up" />
+                                            <Button
+                                                Height="15"
+                                                Margin="0,2,0,0"
+                                                Command="{Binding DataContext.MoveLayerDownCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                CommandParameter="{Binding}"
+                                                Content="↓"
+                                                FontSize="8"
+                                                ToolTip="Move down" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                                                <ContentPresenter />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="#E3F2FD" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -8,14 +9,16 @@ namespace DrawProject.Models
     {
         // === ДАННЫЕ ИЗОБРАЖЕНИЯ ===
         bool _wasChanged = false;
-        List<WriteableBitmap> _layers = new();
+        ObservableCollection<Layer> _layers = new();
+        public ObservableCollection<Layer> GetLayers => _layers;
         int _selectedLayerIndex = 0;
 
-        public WriteableBitmap ActiveLayer => _layers[SelectedLayerIndex];
+        public WriteableBitmap ActiveSource => SelectedLayerIndex >= 0 ? _layers[SelectedLayerIndex].Source : null;
+        public Layer SelectedLayer => SelectedLayerIndex >= 0 ? _layers[SelectedLayerIndex] : null;
         public int Width { get; private set; }
         public int Height { get; private set; }
         public bool WasChanged { get => _wasChanged; set => _wasChanged = value; }
-        public int SelectedLayerIndex { get => _selectedLayerIndex; set => _selectedLayerIndex = (int)Math.Clamp(value, 0, _layers.Count - 1); }
+        public int SelectedLayerIndex { get => _selectedLayerIndex; set => _selectedLayerIndex = (int)Math.Clamp(value, -1, _layers.Count - 1); }
 
         // Предвычисленные значения
         private readonly int _stride;
@@ -41,14 +44,14 @@ namespace DrawProject.Models
         }
         public void AddNewLayer()
         {
-            _layers.Add(new WriteableBitmap(Width, Height, 96, 96,
-                PixelFormats.Pbgra32, null));
+            _layers.Add(new(new WriteableBitmap(Width, Height, 96, 96,
+                PixelFormats.Pbgra32, null)));
             SelectedLayerIndex = _layers.Count - 1;
         }
         public void AddNewLayer(BitmapSource source)
         {
             AddNewLayer();
-            WriteableBitmap Bitmap = _layers[SelectedLayerIndex];
+            WriteableBitmap Bitmap = _layers[SelectedLayerIndex].Source;
             // Если размеры Bitmap не совпадают с источником, может понадобиться масштабирование
             if (Bitmap.PixelWidth != source.PixelWidth || Bitmap.PixelHeight != source.PixelHeight)
             {
@@ -62,9 +65,9 @@ namespace DrawProject.Models
                 );
 
                 // Копируем пиксели из масштабированного источника
-                Bitmap.WritePixels(
-                    new Int32Rect(0, 0, Bitmap.PixelWidth, Bitmap.PixelHeight),
-                    GetPixelsFromBitmapSource(scaledSource),
+                Bitmap.WritePixels(new Int32Rect(0, 0, Bitmap.PixelWidth, Bitmap.PixelHeight),
+                    GetPixelsFromBitmapSource(scaledSource)
+                    ,
                     Bitmap.BackBufferStride,
                     0
                 );
@@ -80,23 +83,16 @@ namespace DrawProject.Models
                 );
             }
         }
-
         // === ОЧИСТКА ===
         public void ClearActiveLayer()
         {
-            _layers[SelectedLayerIndex].Lock();
-            try
-            {
-                // Используем WritePixels для быстрой очистки
-                var clearPixels = new byte[_bufferSize];
 
-                _layers[SelectedLayerIndex].WritePixels(new Int32Rect(0, 0, Width, Height),
-                        clearPixels, _stride, 0);
-            }
-            finally
-            {
-                _layers[SelectedLayerIndex].Unlock();
-            }
+            // Используем WritePixels для быстрой очистки
+            var clearPixels = new byte[_bufferSize];
+
+            _layers[SelectedLayerIndex].Source.WritePixels(new Int32Rect(0, 0, Width, Height),
+                    clearPixels, _stride, 0);
+
         }
 
         public void ClearDocument()
@@ -129,8 +125,8 @@ namespace DrawProject.Models
                 return null;
 
             // Проверяем размер первого слоя (все слои одинакового размера)
-            int width = _layers[0].PixelWidth;
-            int height = _layers[0].PixelHeight;
+            int width = _layers[0].Source.PixelWidth;
+            int height = _layers[0].Source.PixelHeight;
 
             // Создаем пустой WriteableBitmap для результата
             WriteableBitmap result = new WriteableBitmap(
@@ -149,7 +145,7 @@ namespace DrawProject.Models
             {
                 // Получаем пиксели слоя
                 byte[] layerPixels = new byte[height * stride];
-                layer.CopyPixels(layerPixels, stride, 0);
+                layer.Source.CopyPixels(layerPixels, stride, 0);
 
                 // Накладываем слой
                 BlendPixels(resultPixels, layerPixels);
@@ -191,14 +187,14 @@ namespace DrawProject.Models
         // === ПЕРЕНОС ВЕКТОРА В РАСТР ===
         public void ApplyVectorLayer(BitmapSource vectorLayer, bool isEraser = false)
         {
-            if (vectorLayer == null) return;
+            if (vectorLayer == null || SelectedLayerIndex == -1) return;
 
 
             // Копируем векторный слой в кэшированный буфер
             vectorLayer.CopyPixels(_vectorBuffer, _stride, 0);
 
             // Копируем текущий Bitmap в кэшированный буфер
-            _layers[SelectedLayerIndex].CopyPixels(_rasterBuffer, _stride, 0);
+            _layers[SelectedLayerIndex].Source.CopyPixels(_rasterBuffer, _stride, 0);
 
             if (!isEraser)
             {
@@ -210,8 +206,8 @@ namespace DrawProject.Models
             }
 
             // Записываем обратно
-            _layers[SelectedLayerIndex].WritePixels(new Int32Rect(0, 0, Width, Height),
-                _rasterBuffer, _stride, 0);
+            _layers[SelectedLayerIndex].UpdatePixels(new Int32Rect(0, 0, Width, Height),
+                _rasterBuffer, _stride);
 
         }
 

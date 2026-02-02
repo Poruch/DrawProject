@@ -1,8 +1,4 @@
-﻿// Source - https://stackoverflow.com/a/6782715
-// Posted by Wiesław Šoltés, modified by community. See post 'Timeline' for change history
-// Retrieved 2026-02-01, License - CC BY-SA 4.0
-
-using System.Linq;
+﻿using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -57,9 +53,9 @@ namespace DrawProject.Controls
                 this.MouseMove += child_MouseMove;
                 this.PreviewMouseRightButtonDown += new MouseButtonEventHandler(
                   child_PreviewMouseRightButtonDown);
+                this.ClipToBounds = true;
             }
         }
-
         public void Reset()
         {
             if (child != null)
