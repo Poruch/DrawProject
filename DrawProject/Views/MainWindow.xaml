@@ -36,20 +36,21 @@
                         <MenuItem Header="File">
                             <MenuItem Command="{Binding CreateCommand}" Header="Create" />
                             <MenuItem Command="{Binding OpenCommand}" Header="Open" />
-                            <MenuItem Command="{Binding SaveCommand}" Header="Save" />
-                            <MenuItem Command="{Binding SaveAsCommand}" Header="Save as" />
+                            <MenuItem
+                                Command="{Binding SaveCommand}"
+                                Header="Save"
+                                IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
+                            <MenuItem
+                                Command="{Binding SaveAsCommand}"
+                                Header="Save as"
+                                IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
                             <Separator />
                             <MenuItem Header="Exit" />
                         </MenuItem>
                     </Menu>
 
                     <Menu>
-                        <MenuItem Header="Tools">
-                            <MenuItem Command="{Binding SelectBrushCommand}" Header="Brush" />
-                            <MenuItem Command="{Binding SelectEraserCommand}" Header="Eraser" />
-                            <MenuItem Command="{Binding SelectRectangleCommand}" Header="Rectangle" />
-                            <MenuItem Command="{Binding SelectPipetteCommand}" Header="Pipette" />
-                        </MenuItem>
+                        <MenuItem x:Name="ToolBox" Header="Tools" />
                     </Menu>
 
                     <Menu>
@@ -136,6 +137,18 @@
                                 Text="{Binding BrushSize, StringFormat={}{0:F0}}" />
                         </StackPanel>
                     </Border>
+                    <TextBlock
+                        Margin="0,10,0,0"
+                        Padding="8,5"
+                        Background="#F8F8F8"
+                        FontSize="11">
+                        <Run Text="{Binding ActiveTool.Name, FallbackValue=Кисть}" />
+                        <Run Foreground="#666666" Text=" (" />
+                        <Run Text="{Binding MousePosition.X, StringFormat={}{0:F0}, FallbackValue=0}" />
+                        <Run Text="," />
+                        <Run Text="{Binding MousePosition.Y, StringFormat={}{0:F0}, FallbackValue=0}" />
+                        <Run Foreground="#666666" Text=")" />
+                    </TextBlock>
                 </StackPanel>
             </ScrollViewer>
 
@@ -146,11 +159,7 @@
                 Background="#F8F8F8"
                 BorderBrush="LightGray"
                 BorderThickness="1">
-                <controls:ZoomBorder
-                    x:Name="zoomBorder"
-                    Width="{Binding CurrentDoc.Width}"
-                    Height="{Binding CurrentDoc.Height}"
-                    Background="Transparent">
+                <controls:ZoomBorder x:Name="zoomBorder">
                     <controls:HybridCanvas
                         x:Name="drawingCanvas"
                         Width="{Binding CurrentDoc.Width}"

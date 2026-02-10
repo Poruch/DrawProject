@@ -8,12 +8,16 @@ using System.Windows.Controls;
 
 namespace DrawProject.Instruments
 {
-    public class RectangleInstrument : Tool
+    public class RectangleTool : Tool
     {
         private Point _startPoint;
         private bool _isDrawing = false;
         private Rectangle _previewRectangle;
-
+        public RectangleTool()
+        {
+            Name = "Прямоугольник";
+            ToolTip = "Строит прямоугольник";
+        }
         public override void OnMouseDown(InstrumentContext context)
         {
             if (context.Canvas == null || context.Canvas.Brush == null) return;

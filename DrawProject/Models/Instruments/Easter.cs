@@ -9,10 +9,13 @@ using System.Windows.Controls;
 
 class Easter : Tool
 {
-    public string Name => throw new NotImplementedException();
+    public Easter()
+    {
+        Name = "Ластик";
+        ToolTip = "Стирает пиксели";
+    }
     Brush Brush { get; set; }
     public Canvas VectorOverlay { get; set; }
-    public ImageSource Icon => throw new NotImplementedException();
 
     private List<UIElement> _currentStroke = new();
     public override void OnMouseDown(InstrumentContext context)

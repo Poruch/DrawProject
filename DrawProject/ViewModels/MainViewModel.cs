@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Reflection;
 using System.Reflection.Emit;
 using System.Security.Cryptography.X509Certificates;
 using System.Windows;
@@ -22,6 +24,16 @@ namespace DrawProject.ViewModels
         private ImageDocument _currentDoc;
         private HybridCanvas _drawingCanvas;
         private Tool _activeTool;
+
+        private Point _mousePoint = new Point();
+        public Point MousePosition
+        {
+            get => _mousePoint;
+            set
+            {
+                SetProperty(ref _mousePoint, value);
+            }
+        }
         public Tool ActiveTool
         {
             get => _activeTool;
@@ -110,10 +122,6 @@ namespace DrawProject.ViewModels
         // === КОМАНДЫ ===
         public ICommand ClearCommand { get; }
         public ICommand ChangeColorCommand { get; }
-        public ICommand SelectBrushCommand { get; }
-        public ICommand SelectEraserCommand { get; }
-
-        public ICommand SelectRectangleCommand { get; }
         public ICommand ColorWheelChanged { get; }
 
         public ICommand SaveCommand { get; }
@@ -132,8 +140,6 @@ namespace DrawProject.ViewModels
         public ICommand AddLayerCommand { get; }
 
         public ICommand RemoveLayerCommand { get; }
-
-
 
 
 
@@ -164,32 +170,14 @@ namespace DrawProject.ViewModels
         }
         string currentPath = "";
         //Список инструментов
-        BrushInstrument brushInstrument;
-        Easter easter;
-        RectangleInstrument rectangleInstrument;
-        PipetteTool pipetteTool;
+
         // === КОНСТРУКТОР ===
         public MainViewModel()
         {
-
-            //CurrentDoc = new ImageDocument(1, 1);
-
-            brushInstrument = new BrushInstrument();
-            easter = new Easter();
-            rectangleInstrument = new RectangleInstrument();
-            pipetteTool = new PipetteTool();
-            _activeTool = brushInstrument;
-
-
             ClearCommand = new RelayCommand(ClearCanvas);
             ChangeColorCommand = new RelayCommand<Color>(ChangeColor);
             ColorWheelChanged = new RelayCommand<Color>(OnColorChanged);
 
-
-            SelectBrushCommand = new RelayCommand(BrushTool);
-            SelectEraserCommand = new RelayCommand(EasterTool);
-            SelectRectangleCommand = new RelayCommand(RectangleTool);
-            SelectPipetteCommand = new RelayCommand(() => { ActiveTool = pipetteTool; });
 
             SaveCommand = new RelayCommand(SaveImage);
             OpenCommand = new RelayCommand(OpenImage);
@@ -209,6 +197,42 @@ namespace DrawProject.ViewModels
             _brush.Shape = new SquareBrushShape();
         }
 
+        public List<MenuItem> GenerateToolMenuItems()
+        {
+            var menuItems = new List<MenuItem>();
+
+            // Находим все классы-наследники Tool в текущей сборке
+            var toolTypes = Assembly.GetExecutingAssembly()
+                .GetTypes()
+                .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Tool)))
+                .ToList();
+
+            foreach (var toolType in toolTypes)
+            {
+                // Создаем экземпляр инструмента
+                if (Activator.CreateInstance(toolType) is Tool tool)
+                {
+                    // Создаем MenuItem
+
+                    var menuItem = new MenuItem
+                    {
+                        Header = tool.Name,
+                        ToolTip = tool.ToolTip,
+                        Tag = tool // Сохраняем инструмент в Tag
+                    };
+
+                    menuItem.Command = new RelayCommand(() => { OnToolselected(menuItem.Tag as Tool); });
+                    menuItems.Add(menuItem);
+                }
+            }
+
+            return menuItems;
+        }
+
+        private void OnToolselected(Tool tool)
+        {
+            ActiveTool = tool;
+        }
         // === МЕТОДЫ ===
         private void ClearCanvas()
         {
@@ -219,21 +243,6 @@ namespace DrawProject.ViewModels
         {
             BrushColor = color;
         }
-
-        private void EasterTool()
-        {
-            ActiveTool = easter;
-        }
-        private void BrushTool()
-        {
-            ActiveTool = brushInstrument;
-        }
-
-        private void RectangleTool()
-        {
-            ActiveTool = rectangleInstrument;
-        }
-
 
         private void OnColorChanged(Color color)
         {

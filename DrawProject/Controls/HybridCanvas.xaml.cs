@@ -285,8 +285,8 @@ namespace DrawProject.Controls
             Tool?.OnMouseUp(context);
 
             lastPoint = null;
-
-            CommitDrawing();
+            if (Tool.CommitOnMouseUp)
+                CommitDrawing();
         }
 
         private void ProcessAllRemainingPoints()

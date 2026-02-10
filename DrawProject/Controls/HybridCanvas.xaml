@@ -22,6 +22,8 @@
             <!--  Видно ли красный?  -->
             <!--  Установите Width и Height или привяжите к Canvas  -->
             <Rectangle
+                Width="{Binding ImageDocument.Width, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Height="{Binding ImageDocument.Height, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Center"
                 Fill="{StaticResource CheckerboardBrush}" />

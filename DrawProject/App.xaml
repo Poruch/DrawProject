@@ -1,13 +1,15 @@
-﻿<Application x:Class="DrawProject.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:DrawProject"
-             StartupUri="Views/MainWindow.xaml">
+﻿<Application
+    x:Class="DrawProject.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:DrawProject"
+    StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
-        <ImageBrush x:Key="CheckerboardBrush"
-           TileMode="Tile"
-           Viewport="0,0,20,20"
-           ViewportUnits="Absolute"
-           ImageSource="pack://application:,,,/Resources/checkerboard.png"/>
+        <ImageBrush
+            x:Key="CheckerboardBrush"
+            ImageSource="pack://application:,,,/Resources/checkerboard.png"
+            TileMode="Tile"
+            Viewport="0,0,20,20"
+            ViewportUnits="Absolute" />
     </Application.Resources>
 </Application>

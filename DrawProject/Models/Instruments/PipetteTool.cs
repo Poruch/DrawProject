@@ -1,31 +1,64 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DrawProject.Models.Instruments;
+using System.Windows.Media;
+using System.Windows.Input;
+using System.Windows.Media.Imaging;
+using System.Windows;
+using System.Xml.Linq;
+using DrawProject.Controls;
 
-namespace DrawProject.Models.Instruments
+public class SimplePipetteTool : Tool
 {
-    class PipetteTool : Tool
+    public SimplePipetteTool()
     {
-        public override void OnMouseDown(InstrumentContext context)
-        {
-            throw new NotImplementedException();
-        }
+        Name = "Пипетка";
+        ToolTip = "Подбирает цвет";
+    }
 
-        public override void OnMouseLeave(InstrumentContext context)
-        {
-            throw new NotImplementedException();
-        }
+    public override void OnMouseDown(InstrumentContext context)
+    {
+        if (context?.Canvas == null || context.Brush == null) return;
 
-        public override void OnMouseMove(InstrumentContext context)
-        {
-            throw new NotImplementedException();
-        }
+        var mousePos = Mouse.GetPosition(context.Canvas);
 
-        public override void OnMouseUp(InstrumentContext context)
+        // Пробуем получить цвет с растрового слоя
+        if (context.Canvas is HybridCanvas hybridCanvas &&
+            hybridCanvas.ImageDocument?.ActiveSource is BitmapSource bitmap)
         {
-            throw new NotImplementedException();
+            var color = GetColorFromBitmap(bitmap, mousePos);
+            if (color.HasValue)
+            {
+                context.Brush.Color = color.Value;
+                System.Media.SystemSounds.Beep.Play();
+            }
         }
     }
+
+    private Color? GetColorFromBitmap(BitmapSource bitmap, Point position)
+    {
+        try
+        {
+            if (position.X >= 0 && position.Y >= 0 &&
+                position.X < bitmap.PixelWidth && position.Y < bitmap.PixelHeight)
+            {
+                var croppedBitmap = new CroppedBitmap(
+                    bitmap,
+                    new Int32Rect((int)position.X, (int)position.Y, 1, 1));
+
+                var pixels = new byte[4];
+                croppedBitmap.CopyPixels(pixels, 4, 0);
+
+                return Color.FromArgb(pixels[3], pixels[2], pixels[1], pixels[0]);
+            }
+        }
+        catch
+        {
+            // Игнорируем ошибки
+        }
+
+        return null;
+    }
+
+    public override void OnMouseMove(InstrumentContext context) { }
+    public override void OnMouseUp(InstrumentContext context) { }
+    public override void OnMouseLeave(InstrumentContext context) { }
 }

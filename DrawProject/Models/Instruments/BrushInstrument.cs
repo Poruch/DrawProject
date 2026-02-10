@@ -13,14 +13,14 @@ namespace DrawProject.Models.Instruments
 {
     class BrushInstrument : Tool
     {
+
         public BrushInstrument()
         {
-
+            Name = "Кисточка";
+            ToolTip = "Мяу мяу";
         }
-        public string Name => throw new NotImplementedException();
         Brush Brush { get; set; }
         public Canvas VectorOverlay { get; set; }
-        public ImageSource Icon => throw new NotImplementedException();
 
         public override void OnMouseDown(InstrumentContext context)
         {

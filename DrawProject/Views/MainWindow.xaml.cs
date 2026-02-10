@@ -29,8 +29,33 @@ namespace DrawProject
 
             InitializeComponent();
             Closing += MainWindow_Closing;
+
+
+            MainViewModel model = DataContext as MainViewModel;
+            var elements = model.GenerateToolMenuItems();
+
+            if (elements.Count > 0)
+                elements[0].Command.Execute(null);
+            else
+                Debug.WriteLine("Ошибка, инструментов должно быть больше 1");
+
+            for (int i = 0; i < elements.Count; i++)
+            {
+                ToolBox.Items.Add(elements[i]);
+            }
+            this.MouseMove += OnMouseMove;
             //_drawingCanvas = FindName("drawingCanvas") as HybridCanvas;
         }
+
+        private void OnMouseMove(object sender, MouseEventArgs e)
+        {
+            var vm = DataContext as MainViewModel;
+            if (vm != null)
+            {
+                vm.MousePosition = e.GetPosition(sender as IInputElement);
+            }
+        }
+
         private void DrawingCanvas_Loaded(object sender, RoutedEventArgs e)
         {
             if (DataContext is MainViewModel viewModel)
@@ -38,6 +63,8 @@ namespace DrawProject
                 viewModel.DrawingCanvas = sender as HybridCanvas;
             }
         }
+
+
         private void MainWindow_Closing(object sender, CancelEventArgs e)
         {
             var doc = (DataContext as MainViewModel).CurrentDoc;
