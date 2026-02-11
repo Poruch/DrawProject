@@ -10,7 +10,15 @@
 
   <ItemGroup>
     <None Remove="Resources\checkerboard.png" />
-    <None Remove="Resources\Cursors\format-color-fill.cur" />
+    <None Remove="Resources\Cursors\ellipse-outline.png" />
+    <None Remove="Resources\Cursors\eraser.png" />
+    <None Remove="Resources\Cursors\eyedropper.png" />
+    <None Remove="Resources\Cursors\format-color-fill.png" />
+    <None Remove="Resources\Cursors\pen.png" />
+    <None Remove="Resources\Cursors\rectangle-outline.png" />
+    <None Remove="Resources\Cursors\star.png" />
+    <None Remove="Resources\Cursors\text-box-edit-outline.png" />
+    <None Remove="Resources\Cursors\vector-line.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,7 +27,15 @@
 
   <ItemGroup>
     <Resource Include="Resources\checkerboard.png" />
-    <Resource Include="Resources\Cursors\format-color-fill.cur" />
+    <Resource Include="Resources\Cursors\ellipse-outline.png" />
+    <Resource Include="Resources\Cursors\eraser.png" />
+    <Resource Include="Resources\Cursors\eyedropper.png" />
+    <Resource Include="Resources\Cursors\format-color-fill.png" />
+    <Resource Include="Resources\Cursors\pen.png" />
+    <Resource Include="Resources\Cursors\rectangle-outline.png" />
+    <Resource Include="Resources\Cursors\star.png" />
+    <Resource Include="Resources\Cursors\text-box-edit-outline.png" />
+    <Resource Include="Resources\Cursors\vector-line.png" />
   </ItemGroup>
 
   <ItemGroup>

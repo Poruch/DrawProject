@@ -17,6 +17,7 @@ namespace DrawProject.Instruments
         {
             Name = "Линия";
             ToolTip = "Рисует линию";
+            CursorPath = "pack://application:,,,/Resources/Cursors/vector-line.png";
         }
 
         public override void OnMouseDown(InstrumentContext context)

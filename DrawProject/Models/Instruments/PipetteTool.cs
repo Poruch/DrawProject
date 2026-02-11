@@ -12,6 +12,7 @@ public class SimplePipetteTool : Tool
     {
         Name = "Пипетка";
         ToolTip = "Подбирает цвет";
+        CursorPath = "pack://application:,,,/Resources/Cursors/eyedropper.png";
     }
 
     public override void OnMouseDown(InstrumentContext context)

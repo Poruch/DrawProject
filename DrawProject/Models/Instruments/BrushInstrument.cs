@@ -19,6 +19,7 @@ namespace DrawProject.Models.Instruments
         {
             Name = "Кисточка";
             ToolTip = "Мяу мяу";
+            CursorPath = "pack://application:,,,/Resources/Cursors/pen.png";
         }
         Brush Brush { get; set; }
         public Canvas VectorOverlay { get; set; }

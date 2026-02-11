@@ -7,12 +7,13 @@ using System;
 using DrawProject.Controls;
 using System.Windows.Controls;
 
-class Easter : Tool
+class Eraser : Tool
 {
-    public Easter()
+    public Eraser()
     {
         Name = "Ластик";
         ToolTip = "Стирает пиксели";
+        CursorPath = "pack://application:,,,/Resources/Cursors/eraser.png";
     }
     Brush Brush { get; set; }
     public Canvas VectorOverlay { get; set; }

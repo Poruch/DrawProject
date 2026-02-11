@@ -12,9 +12,11 @@
     Width="834"
     Height="452"
     mc:Ignorable="d">
+
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
+
     <Window.Resources>
         <converters:ColorConverter x:Key="ColorConverter" />
         <converters:ObjectToBoolConverter x:Key="ObjectToBoolConverter" />
@@ -25,6 +27,7 @@
             ShadowDepth="2"
             Color="Black" />
     </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -32,6 +35,8 @@
             <RowDefinition Height="*" />
             <!--  Основное содержимое  -->
         </Grid.RowDefinitions>
+
+        <!--  === Popup "О программе" (остаётся как есть) ===  -->
         <Popup
             x:Name="aboutPopup"
             AllowsTransparency="True"
@@ -39,7 +44,6 @@
             Placement="Mouse"
             PopupAnimation="Slide"
             StaysOpen="False">
-
             <Border
                 Width="350"
                 Padding="20"
@@ -48,15 +52,12 @@
                 BorderThickness="1"
                 CornerRadius="8"
                 Effect="{StaticResource DropShadowEffect}">
-
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-
-                    <!--  Заголовок  -->
                     <StackPanel
                         Grid.Row="0"
                         Margin="0,0,0,15"
@@ -72,8 +73,6 @@
                             Foreground="#2C3E50"
                             Text="О программе" />
                     </StackPanel>
-
-                    <!--  Контент  -->
                     <StackPanel Grid.Row="1">
                         <TextBlock
                             Margin="0,0,0,5"
@@ -85,17 +84,13 @@
                             Margin="0,0,0,10"
                             Foreground="#34495E"
                             Text="Векторно-растровый графический редактор" />
-
                         <Separator Margin="0,5,0,10" />
-
                         <StackPanel Margin="0,0,0,15">
                             <TextBlock Foreground="#2C3E50" Text="Версия: 1.0.0" />
                             <TextBlock Foreground="#2C3E50" Text="Сборка: Release 2024" />
                             <TextBlock Foreground="#2C3E50" Text="Дата сборки: 15.12.2024" />
                         </StackPanel>
-
                         <Separator Margin="0,5,0,10" />
-
                         <TextBlock
                             FontSize="11"
                             FontStyle="Italic"
@@ -110,77 +105,82 @@
                 </Grid>
             </Border>
         </Popup>
-        <!--  Панель инструментов  -->
-        <DockPanel>
-            <ToolBar Grid.Row="0" Background="#F0F0F0">
-                <DockPanel HorizontalAlignment="Stretch" LastChildFill="False">
-                    <!--  Левая часть: меню  -->
-                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                        <Menu>
-                            <MenuItem Header="File">
-                                <MenuItem Command="{Binding CreateCommand}" Header="Create" />
-                                <MenuItem Command="{Binding OpenCommand}" Header="Open" />
-                                <MenuItem
-                                    Command="{Binding ResizeCommand}"
-                                    Header="Resize"
-                                    IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
-                                <MenuItem
-                                    Command="{Binding SaveCommand}"
-                                    Header="Save"
-                                    IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
-                                <MenuItem
-                                    Command="{Binding SaveAsCommand}"
-                                    Header="Save as"
-                                    IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
-                                <Separator />
-                                <MenuItem Header="Exit" />
-                            </MenuItem>
-                        </Menu>
 
-                        <Menu>
-                            <MenuItem x:Name="ToolBox" Header="Tools" />
-                        </Menu>
+        <!--  === Верхняя панель инструментов ===  -->
+        <ToolBar Grid.Row="0" Background="#F0F0F0">
+            <DockPanel HorizontalAlignment="Stretch" LastChildFill="True">
+                <!--  Левая часть: меню  -->
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <Menu>
+                        <MenuItem Header="File">
+                            <MenuItem Command="{Binding CreateCommand}" Header="Create" />
+                            <MenuItem Command="{Binding OpenCommand}" Header="Open" />
+                            <MenuItem
+                                Command="{Binding ResizeCommand}"
+                                Header="Resize"
+                                IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
+                            <MenuItem
+                                Command="{Binding SaveCommand}"
+                                Header="Save"
+                                IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
+                            <MenuItem
+                                Command="{Binding SaveAsCommand}"
+                                Header="Save as"
+                                IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
+                            <Separator />
+                            <MenuItem Header="Exit" />
+                        </MenuItem>
+                    </Menu>
 
-                        <Menu>
-                            <MenuItem Header="Layers">
-                                <MenuItem Command="{Binding ClearCommand}" Header="Clear" />
-                            </MenuItem>
-                        </Menu>
-                    </StackPanel>
+                    <Menu>
+                        <MenuItem x:Name="ToolBox" Header="Tools" />
+                    </Menu>
 
-                    <!--  Правая часть (если нужны дополнительные кнопки)  -->
+                    <Menu>
+                        <MenuItem Header="Layers">
+                            <MenuItem Command="{Binding ClearCommand}" Header="Clear" />
+                        </MenuItem>
+                    </Menu>
+                </StackPanel>
 
-                </DockPanel>
+                <!--  Правая часть: кнопка "О программе"  -->
+                <Button
+                    Margin="0,0,10,0"
+                    Click="OpenProgrammInfo"
+                    Content="О программе"
+                    DockPanel.Dock="Right" />
+            </DockPanel>
+        </ToolBar>
 
-            </ToolBar>
-            <Border
-                Grid.Column="1"
-                Margin="0,0,10,0"
-                HorizontalAlignment="Right"
-                Background="Transparent">
-                <Button Click="OpenProgrammInfo" Content="О программе" />
-            </Border>
-        </DockPanel>
-        <!--  Основное содержимое  -->
+        <!--  === Основное содержимое (3 колонки) ===  -->
+        <!--  === Основное содержимое с регулируемыми панелями ===  -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="120" MinWidth="100" />
                 <!--  Левая панель  -->
-                <ColumnDefinition Width="*" />
-                <!--  Центр: холст  -->
-                <ColumnDefinition Width="150" MinWidth="120" />
+                <ColumnDefinition
+                    Width="120"
+                    MinWidth="80"
+                    MaxWidth="300" />
+                <!--  Разделитель слева  -->
+                <ColumnDefinition Width="5" />
+                <!--  Центр (холст)  -->
+                <ColumnDefinition Width="*" MinWidth="200" />
+                <!--  Разделитель справа  -->
+                <ColumnDefinition Width="5" />
                 <!--  Правая панель  -->
+                <ColumnDefinition
+                    Width="150"
+                    MinWidth="100"
+                    MaxWidth="250" />
             </Grid.ColumnDefinitions>
 
-            <!--  Левая панель инструментов  -->
+            <!--  Левая панель: цвет + размер кисти  -->
             <ScrollViewer
                 Grid.Column="0"
-                Grid.ColumnSpan="2"
-                Margin="0,0,558,0"
+                Margin="5"
                 HorizontalScrollBarVisibility="Disabled"
                 VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="5">
-                    <!--  Цветовые вкладки  -->
                     <Border
                         Margin="0,0,0,10"
                         Background="White"
@@ -205,7 +205,6 @@
                         </TabControl>
                     </Border>
 
-                    <!--  Размер кисти  -->
                     <Border
                         Padding="10,5"
                         Background="White"
@@ -233,6 +232,7 @@
                                 Text="{Binding BrushSize, StringFormat={}{0:F0}}" />
                         </StackPanel>
                     </Border>
+
                     <TextBlock
                         Margin="0,10,0,0"
                         Padding="8,5"
@@ -245,6 +245,7 @@
                         <Run Text="{Binding MousePosition.Y, StringFormat={}{0:F0}, FallbackValue=0}" />
                         <Run Foreground="#666666" Text=")" />
                     </TextBlock>
+
                     <TextBlock
                         Margin="0,0,0,10"
                         Padding="8,5"
@@ -258,9 +259,17 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <!--  Центральная область: холст  -->
-            <Border
+            <!--  Разделитель между левой и центральной панелью  -->
+            <GridSplitter
                 Grid.Column="1"
+                Width="5"
+                HorizontalAlignment="Stretch"
+                Background="Transparent"
+                Cursor="SizeWE" />
+
+            <!--  Центр: холст  -->
+            <Border
+                Grid.Column="2"
                 Margin="5"
                 Background="#F8F8F8"
                 BorderBrush="LightGray"
@@ -279,15 +288,22 @@
                 </controls:ZoomBorder>
             </Border>
 
+            <!--  Разделитель между центральной и правой панелью  -->
+            <GridSplitter
+                Grid.Column="3"
+                Width="5"
+                HorizontalAlignment="Stretch"
+                Background="Transparent"
+                Cursor="SizeWE" />
+
             <!--  Правая панель: слои  -->
             <Border
-                Grid.Column="2"
+                Grid.Column="4"
                 Margin="5"
                 Background="White"
                 BorderBrush="LightGray"
                 BorderThickness="1">
                 <DockPanel>
-                    <!--  Заголовок панели слоев  -->
                     <Border
                         Padding="10,5"
                         Background="#F0F0F0"
@@ -300,7 +316,6 @@
                             Text="Layers" />
                     </Border>
 
-                    <!--  Кнопки управления слоями  -->
                     <StackPanel
                         Margin="5"
                         HorizontalAlignment="Center"
@@ -319,7 +334,6 @@
                             ToolTip="Remove selected layer" />
                     </StackPanel>
 
-                    <!--  Список слоев  -->
                     <ListBox
                         x:Name="layersListBox"
                         BorderThickness="0"
@@ -334,7 +348,6 @@
                                     Background="Transparent"
                                     CornerRadius="3">
                                     <DockPanel Height="40">
-                                        <!--  Миниатюра слоя  -->
                                         <Border
                                             Width="30"
                                             Height="30"
@@ -343,15 +356,9 @@
                                             BorderThickness="1"
                                             CornerRadius="3"
                                             DockPanel.Dock="Left">
-
                                             <Grid>
-                                                <!--  Фон  -->
                                                 <Rectangle Fill="White" />
-
-                                                <!--  Изображение из Source  -->
                                                 <Image Source="{Binding Source}" Stretch="UniformToFill" />
-
-                                                <!--  Текст IMG  -->
                                                 <TextBlock
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
@@ -362,7 +369,6 @@
                                             </Grid>
                                         </Border>
 
-                                        <!--  Название слоя  -->
                                         <Button
                                             Padding="5,0"
                                             HorizontalAlignment="Stretch"
@@ -392,7 +398,6 @@
                                             </Button.Style>
                                         </Button>
 
-                                        <!--  Кнопки управления  -->
                                         <StackPanel
                                             Width="25"
                                             DockPanel.Dock="Right"

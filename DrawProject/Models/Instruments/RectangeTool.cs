@@ -21,6 +21,7 @@ namespace DrawProject.Instruments
         {
             Name = "Прямоугольник";
             ToolTip = "Строит прямоугольник";
+            CursorPath = "pack://application:,,,/Resources/Cursors/rectangle-outline.png";
         }
         public override void OnMouseDown(InstrumentContext context)
         {

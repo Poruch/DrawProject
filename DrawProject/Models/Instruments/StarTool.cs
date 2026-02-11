@@ -26,6 +26,7 @@ namespace DrawProject.Instruments
         {
             Name = "Звезда";
             ToolTip = "Строит звезду с настраиваемым количеством лучей";
+            CursorPath = "pack://application:,,,/Resources/Cursors/star.png";
             PointsCount = 5;
             InnerRadiusRatio = 0.5;
         }

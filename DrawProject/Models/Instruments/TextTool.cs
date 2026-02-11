@@ -16,9 +16,10 @@ namespace DrawProject.Models.Instruments
 
         public TextTool()
         {
-            Name = "Text";
-            ToolTip = "Add text to canvas (click once to place, click again to finish)";
+            Name = "Текст";
+            ToolTip = "Добавляет текст на холст";
             CommitOnMouseUp = false;
+            CursorPath = "pack://application:,,,/Resources/Cursors/text-box-edit-outline.png";
         }
 
         public override void OnMouseDown(InstrumentContext context)

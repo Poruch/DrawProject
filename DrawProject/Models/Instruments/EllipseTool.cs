@@ -19,6 +19,7 @@ namespace DrawProject.Instruments
         {
             Name = "Эллипс";
             ToolTip = "Строит эллипс";
+            CursorPath = "pack://application:,,,/Resources/Cursors/ellipse-outline.png";
         }
 
         public override void OnMouseDown(InstrumentContext context)
