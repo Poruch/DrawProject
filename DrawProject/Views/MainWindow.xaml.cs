@@ -21,20 +21,17 @@ namespace DrawProject
     public partial class MainWindow : Window
     {
         public ICommand ResetPanelSizesCommand { get; }
-        private HybridCanvas _drawingCanvas;
+        int leftWifth = 150;
+        int rightWifth = 150;
         public MainWindow()
         {
-
-            //DataContext = new MainViewModel();
-
             InitializeComponent();
             Closing += MainWindow_Closing;
             ResetPanelSizesCommand = new RelayCommand(ResetPanelSizes);
-
+            ResetPanelSizes();
             var model = DataContext as MainViewModel;
-            model.DrawingCanvas = _drawingCanvas;
+            model.DrawingCanvas = drawingCanvas;
             var menuItems = model.GenerateToolMenuItems();
-            // Добавление в ToolBox (предполагается, что ToolBox — это ItemsControl)
             ToolBox.Items.Clear();
             foreach (var item in menuItems)
             {
@@ -42,14 +39,13 @@ namespace DrawProject
             }
             model.ApplyDefaultTool();
             this.MouseMove += OnMouseMove;
-            //_drawingCanvas = FindName("drawingCanvas") as HybridCanvas;
         }
 
         private void ResetPanelSizes()
         {
             // Сохраняем желаемые значения
-            var leftWidth = new GridLength(150);
-            var rightWidth = new GridLength(150);
+            var leftWidth = new GridLength(leftWifth);
+            var rightWidth = new GridLength(rightWifth);
 
             // Применяем их
             LeftColumn.Width = leftWidth;

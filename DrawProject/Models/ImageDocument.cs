@@ -255,35 +255,61 @@ namespace DrawProject.Models
 
         private void ApplyBrush(byte[] rasterPixels, byte[] vectorPixels)
         {
-            // Кисть: обычный альфа-блендинг
             for (int i = 0; i < rasterPixels.Length; i += 4)
             {
-                byte vectorAlpha = vectorPixels[i + 3];
+                byte srcB = vectorPixels[i];
+                byte srcG = vectorPixels[i + 1];
+                byte srcR = vectorPixels[i + 2];
+                byte srcA = vectorPixels[i + 3];
 
-                if (vectorAlpha > 0)
+                if (srcA == 0) continue; // Нечего накладывать
+
+                byte dstB = rasterPixels[i];
+                byte dstG = rasterPixels[i + 1];
+                byte dstR = rasterPixels[i + 2];
+                byte dstA = rasterPixels[i + 3];
+
+                if (srcA == 255 && dstA == 255)
                 {
-                    if (vectorAlpha == 255)
-                    {
-                        // Полная замена (самый быстрый случай)
-                        rasterPixels[i] = vectorPixels[i];     // B
-                        rasterPixels[i + 1] = vectorPixels[i + 1]; // G
-                        rasterPixels[i + 2] = vectorPixels[i + 2]; // R
-                        rasterPixels[i + 3] = 255; // A
-                    }
-                    else
-                    {
-                        // Альфа-блендинг
-                        double alpha = vectorAlpha / 255.0;
-                        double invAlpha = 1.0 - alpha;
+                    // Быстрый путь для полностью непрозрачных пикселей
+                    rasterPixels[i] = srcB;
+                    rasterPixels[i + 1] = srcG;
+                    rasterPixels[i + 2] = srcR;
+                    // Альфа остаётся 255
+                }
+                else
+                {
+                    // === Мягкий блендинг "source over" ===
+                    // Используем целочисленную арифметику для скорости и плавности
 
-                        rasterPixels[i] = (byte)(vectorPixels[i] * alpha +
-                                               rasterPixels[i] * invAlpha);
-                        rasterPixels[i + 1] = (byte)(vectorPixels[i + 1] * alpha +
-                                                   rasterPixels[i + 1] * invAlpha);
-                        rasterPixels[i + 2] = (byte)(vectorPixels[i + 2] * alpha +
-                                                   rasterPixels[i + 2] * invAlpha);
-                        rasterPixels[i + 3] = 255;
+                    // Нормализуем альфы в диапазон 0..256
+                    int srcAlpha = srcA + 1;
+                    int dstAlpha = dstA + 1;
+                    int invSrcAlpha = 256 - srcAlpha;
+
+                    // Результирующая альфа: outA = srcA + dstA * (1 - srcA)
+                    int outAlpha = srcAlpha + ((dstAlpha * invSrcAlpha) >> 8);
+                    if (outAlpha > 256) outAlpha = 256;
+
+                    // Смешиваем цвета с плавным переходом
+                    // Формула: outC = (srcC * srcA + dstC * dstA * (1 - srcA)) / outA
+                    int b = (srcB * srcAlpha + dstB * dstAlpha * invSrcAlpha / 256);
+                    int g = (srcG * srcAlpha + dstG * dstAlpha * invSrcAlpha / 256);
+                    int r = (srcR * srcAlpha + dstR * dstAlpha * invSrcAlpha / 256);
+
+                    // Нормализуем по результирующей альфе (только если не полностью непрозрачно)
+                    if (outAlpha < 256)
+                    {
+                        b = (b * 255) / outAlpha;
+                        g = (g * 255) / outAlpha;
+                        r = (r * 255) / outAlpha;
                     }
+
+                    // Ограничиваем диапазон 0..255
+                    rasterPixels[i] = (byte)(b > 255 ? 255 : (b < 0 ? 0 : b));
+                    rasterPixels[i + 1] = (byte)(g > 255 ? 255 : (g < 0 ? 0 : g));
+                    rasterPixels[i + 2] = (byte)(r > 255 ? 255 : (r < 0 ? 0 : r));
+                    rasterPixels[i + 3] = (byte)(outAlpha - 1); // обратно в 0..255
                 }
             }
             isUnSaved = true;
@@ -292,14 +318,27 @@ namespace DrawProject.Models
 
         private void ApplyEraser(byte[] rasterPixels, byte[] vectorPixels)
         {
-            // Ластик: где векторный слой не прозрачен - стираем
+            // Ластик: делаем пиксели прозрачными там, где векторный слой непрозрачен
             for (int i = 0; i < rasterPixels.Length; i += 4)
             {
-                // Проверяем, есть ли в векторном слое что-то для стирания
-                if (vectorPixels[i + 3] > 10) // Порог 10 для игнорирования шума
+                // Порог 10 для игнорирования шума/антиалиасинга
+                if (vectorPixels[i + 3] > 10)
                 {
-                    // Делаем пиксель полностью прозрачным
-                    rasterPixels[i + 3] = 0;
+                    // Корректное "стирание" с учётом альфы ластика
+                    byte eraserAlpha = vectorPixels[i + 3];
+                    byte currentAlpha = rasterPixels[i + 3];
+
+                    // Уменьшаем альфу пропорционально силе ластика
+                    int newAlpha = currentAlpha - (currentAlpha * eraserAlpha / 255);
+                    rasterPixels[i + 3] = (byte)(newAlpha < 0 ? 0 : newAlpha);
+
+                    // Опционально: при полном стирании обнуляем цвета
+                    if (newAlpha == 0)
+                    {
+                        rasterPixels[i] = 0;
+                        rasterPixels[i + 1] = 0;
+                        rasterPixels[i + 2] = 0;
+                    }
                 }
             }
             isUnSaved = true;
