@@ -20,6 +20,7 @@ namespace DrawProject
     /// </summary>
     public partial class MainWindow : Window
     {
+        public ICommand ResetPanelSizesCommand { get; }
         private HybridCanvas _drawingCanvas;
         public MainWindow()
         {
@@ -28,7 +29,7 @@ namespace DrawProject
 
             InitializeComponent();
             Closing += MainWindow_Closing;
-
+            ResetPanelSizesCommand = new RelayCommand(ResetPanelSizes);
 
             var model = DataContext as MainViewModel;
             model.DrawingCanvas = _drawingCanvas;
@@ -44,7 +45,25 @@ namespace DrawProject
             //_drawingCanvas = FindName("drawingCanvas") as HybridCanvas;
         }
 
+        private void ResetPanelSizes()
+        {
+            // Сохраняем желаемые значения
+            var leftWidth = new GridLength(150);
+            var rightWidth = new GridLength(150);
 
+            // Применяем их
+            LeftColumn.Width = leftWidth;
+            RightColumn.Width = rightWidth;
+
+            // Ключевой момент: откладываем UpdateLayout до завершения рендеринга
+            Dispatcher.BeginInvoke(
+                new Action(() =>
+                {
+                    MainContentGrid.UpdateLayout();
+                }),
+                System.Windows.Threading.DispatcherPriority.Render
+            );
+        }
 
 
         public void OpenProgrammInfo(object sender, RoutedEventArgs e)

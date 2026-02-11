@@ -147,7 +147,6 @@ namespace DrawProject.ViewModels
         public ICommand ResizeCommand { get; }
 
 
-
         public HybridCanvas DrawingCanvas { get => _drawingCanvas; set => _drawingCanvas = value; }
 
         private ObservableCollection<Layer> _layers = new();
@@ -560,5 +559,10 @@ namespace DrawProject.ViewModels
             _selectedLayerIndex = CurrentDoc.SelectedLayerIndex;
             OnPropertyChanged(nameof(SelectedLayerIndex));
         }
+
+
+
+
+
     }
 }

@@ -141,6 +141,12 @@
                             <MenuItem Command="{Binding ClearCommand}" Header="Clear" />
                         </MenuItem>
                     </Menu>
+
+                    <Menu>
+                        <MenuItem Header="View">
+                            <MenuItem Command="{Binding ResetPanelSizesCommand, RelativeSource={RelativeSource AncestorType=Window}}" Header="Сбросить панели" />
+                        </MenuItem>
+                    </Menu>
                 </StackPanel>
 
                 <!--  Правая часть: кнопка "О программе"  -->
@@ -154,27 +160,33 @@
 
         <!--  === Основное содержимое (3 колонки) ===  -->
         <!--  === Основное содержимое с регулируемыми панелями ===  -->
-        <Grid Grid.Row="1">
+        <Grid x:Name="MainContentGrid" Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <!--  Левая панель  -->
+                <!--  Левая панель (инструменты, цвета)  -->
                 <ColumnDefinition
-                    Width="120"
+                    x:Name="LeftColumn"
+                    Width="150"
                     MinWidth="80"
                     MaxWidth="300" />
-                <!--  Разделитель слева  -->
+
+                <!--  Левый разделитель  -->
                 <ColumnDefinition Width="5" />
+
                 <!--  Центр (холст)  -->
                 <ColumnDefinition Width="*" MinWidth="200" />
-                <!--  Разделитель справа  -->
+
+                <!--  Правый разделитель  -->
                 <ColumnDefinition Width="5" />
-                <!--  Правая панель  -->
+
+                <!--  Правая панель (слои)  -->
                 <ColumnDefinition
+                    x:Name="RightColumn"
                     Width="150"
                     MinWidth="100"
                     MaxWidth="250" />
             </Grid.ColumnDefinitions>
 
-            <!--  Левая панель: цвет + размер кисти  -->
+            <!--  Левая панель: цвет + размер кисти (БЕЗ ColumnSpan!)  -->
             <ScrollViewer
                 Grid.Column="0"
                 Margin="5"
@@ -259,15 +271,15 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <!--  Разделитель между левой и центральной панелью  -->
+            <!--  Левый разделитель  -->
             <GridSplitter
                 Grid.Column="1"
                 Width="5"
                 HorizontalAlignment="Stretch"
-                Background="Transparent"
+                Background="#E0E0E0"
                 Cursor="SizeWE" />
 
-            <!--  Центр: холст  -->
+            <!--  Центр: холст (БЕЗ ColumnSpan!)  -->
             <Border
                 Grid.Column="2"
                 Margin="5"
@@ -288,12 +300,12 @@
                 </controls:ZoomBorder>
             </Border>
 
-            <!--  Разделитель между центральной и правой панелью  -->
+            <!--  Правый разделитель  -->
             <GridSplitter
                 Grid.Column="3"
                 Width="5"
                 HorizontalAlignment="Stretch"
-                Background="Transparent"
+                Background="#E0E0E0"
                 Cursor="SizeWE" />
 
             <!--  Правая панель: слои  -->
