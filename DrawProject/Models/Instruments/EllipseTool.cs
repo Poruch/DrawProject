@@ -4,6 +4,7 @@ using System.Windows.Shapes;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Controls;
+using DrawProject.Attributes;
 
 namespace DrawProject.Instruments
 {
@@ -12,7 +13,8 @@ namespace DrawProject.Instruments
         private Point _startPoint;
         private bool _isDrawing = false;
         private Ellipse _previewEllipse;
-
+        [Inspectable("Закрашивать или нет")]
+        public bool IsFill { get; set; } = false;
         public EllipseTool()
         {
             Name = "Эллипс";
@@ -75,7 +77,7 @@ namespace DrawProject.Instruments
                 StrokeDashArray = new DoubleCollection(new double[] { 4, 2 }),
                 StrokeThickness = brush.Size,
                 Stroke = new SolidColorBrush(brush.Color),
-                Fill = Brushes.Transparent // Прозрачная заливка для предпросмотра
+                Fill = IsFill ? new SolidColorBrush(brush.Color) : Brushes.Transparent // Прозрачная заливка для предпросмотра
             };
 
             // Позиционирование на Canvas
@@ -116,7 +118,7 @@ namespace DrawProject.Instruments
                 Height = Math.Abs(context.Position.Y - _startPoint.Y),
                 StrokeThickness = brush.Size,
                 Stroke = new SolidColorBrush(brush.Color),
-                Fill = Brushes.Transparent // Или можно сделать заливку
+                Fill = IsFill ? new SolidColorBrush(brush.Color) : Brushes.Transparent // Или можно сделать заливку
                 // Fill = new SolidColorBrush(Color.FromArgb(50, brush.Color.R, brush.Color.G, brush.Color.B))
             };
 

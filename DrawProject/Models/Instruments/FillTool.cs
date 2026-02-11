@@ -22,6 +22,7 @@ namespace DrawProject.Models.Instruments
         {
             Name = "Заливка";
             ToolTip = "Быстрая заливка";
+            CursorPath = "pack://application:,,,/Resources/Cursors/format-color-fill.cur";
         }
 
         public override void OnMouseDown(InstrumentContext context)

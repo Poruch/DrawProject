@@ -1,4 +1,5 @@
 ﻿using DrawProject.Models.Instruments;
+using DrawProject.Attributes;
 using System.Diagnostics;
 using System.Windows.Shapes;
 using System.Windows;
@@ -13,6 +14,9 @@ namespace DrawProject.Instruments
         private Point _startPoint;
         private bool _isDrawing = false;
         private Rectangle _previewRectangle;
+
+        [Inspectable("Закрашивать или нет")]
+        public bool IsFill { get; set; } = false;
         public RectangleTool()
         {
             Name = "Прямоугольник";
@@ -75,6 +79,7 @@ namespace DrawProject.Instruments
                 StrokeDashArray = new DoubleCollection(new double[] { 4, 2 }),
                 StrokeThickness = brush.Size,
                 Stroke = new SolidColorBrush(brush.Color),
+                Fill = IsFill ? new SolidColorBrush(brush.Color) : Brushes.Transparent,
             };
 
             // Позиционирование на Canvas
@@ -118,6 +123,7 @@ namespace DrawProject.Instruments
                 Height = Math.Abs(context.Position.Y - _startPoint.Y),
                 StrokeThickness = brush.Size,
                 Stroke = new SolidColorBrush(brush.Color),
+                Fill = IsFill ? new SolidColorBrush(brush.Color) : Brushes.Transparent,
             };
 
             // Позиционирование на Canvas

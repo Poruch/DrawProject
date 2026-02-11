@@ -8,6 +8,8 @@ namespace DrawProject.Models.Instruments
     {
         public string Name { get; set; }
         public string ToolTip { get; set; }
+        public string CursorPath { get; set; } = "";
+
         public Image Icon { get; set; }
         public bool CommitOnMouseUp = true;
         public abstract void OnMouseDown(InstrumentContext context);

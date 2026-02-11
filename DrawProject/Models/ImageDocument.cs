@@ -317,6 +317,8 @@ namespace DrawProject.Models
             {
                 _layers[i].Resize(newWidth, newHeight);
             }
+            isUnSaved = true;
+            WasChanged = true;
         }
 
         // === IDisposable для освобождения ресурсов ===
