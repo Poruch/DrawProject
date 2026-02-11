@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Windows.Media.Imaging;
 using System.Windows;
+using System.Windows.Media;
 
 public class Layer : INotifyPropertyChanged
 {
@@ -78,6 +79,27 @@ public class Layer : INotifyPropertyChanged
         Source.WritePixels(rect, clearPixels, stride, 0);
 
         OnPropertyChanged(nameof(Source));
+    }
+
+    public void Resize(int newWidth, int newHeight)
+    {
+        if (Source == null) return;
+        if (newWidth <= 0 || newHeight <= 0) return;
+
+        // Масштабируем изображение
+        var scaleX = (double)newWidth / Source.PixelWidth;
+        var scaleY = (double)newHeight / Source.PixelHeight;
+
+        var scaledBitmap = new TransformedBitmap(
+            Source,
+            new ScaleTransform(scaleX, scaleY)
+        );
+
+        // Конвертируем в WriteableBitmap
+        var newBitmap = new WriteableBitmap(scaledBitmap);
+
+        // Заменяем источник
+        Source = newBitmap;
     }
 
     // Обновить область с пикселями

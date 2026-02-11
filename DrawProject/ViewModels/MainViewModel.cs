@@ -6,6 +6,7 @@ using System.Reflection.Emit;
 using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -141,7 +142,7 @@ namespace DrawProject.ViewModels
 
         public ICommand RemoveLayerCommand { get; }
 
-
+        public ICommand ResizeCommand { get; }
 
 
 
@@ -189,7 +190,7 @@ namespace DrawProject.ViewModels
             MoveLayerUpCommand = new RelayCommand<Layer>(MoveLayerUp);
             MoveLayerDownCommand = new RelayCommand<Layer>(MoveLayerDown);
 
-
+            ResizeCommand = new RelayCommand(ResizeImage);
             _brush.Color = Colors.Black;
             _brush.Size = 5;
             _brush.Opacity = 1.0f;
@@ -251,10 +252,21 @@ namespace DrawProject.ViewModels
 
         private void OpenCreateContext()
         {
-            CreateDocument(200, 200);
+            var dialog = new CreateImageDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                // Используем размеры
+                var width = dialog.ImageWidth;
+                var height = dialog.ImageHeight;
+                var resolution = dialog.Resolution;
+
+                // Создаем документ
+                CreateDocument((int)width, (int)height);
+            }
         }
         private void CreateDocument(int width, int height)
         {
+
             CurrentDoc = new ImageDocument(width, height);
         }
         private void OpenImage()
@@ -271,7 +283,21 @@ namespace DrawProject.ViewModels
             DrawingCanvas.CommitDrawing();
         }
 
+        private void ResizeImage()
+        {
+            var dialog = new ImageSizeDialog(CurrentDoc.Width, CurrentDoc.Height);
+            if (dialog.ShowDialog() == true)
+            {
+                // Используем размеры
+                var width = dialog.ImageWidth;
+                var height = dialog.ImageHeight;
+                var resolution = dialog.Resolution;
 
+                // Создаем документ
+                CurrentDoc.Resize((int)width, (int)height);
+                DrawingCanvas.CommitDrawing();
+            }
+        }
 
         private void SaveImage()
         {

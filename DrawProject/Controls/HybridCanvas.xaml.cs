@@ -52,6 +52,7 @@ namespace DrawProject.Controls
             set => SetValue(ImageDocumentProperty, value);
         }
 
+
         // === ПОЛЯ ===
         private bool _isDrawing = false;
         private bool isInitialize = false;
@@ -93,11 +94,6 @@ namespace DrawProject.Controls
             // Получаем элементы из XAML
             var mainGrid = this.Content as Grid;
             if (mainGrid == null) return;
-
-            // Находим или создаем элементы
-            _rasterImage = mainGrid.FindName("_rasterImage") as Image;
-            _vectorOverlay = mainGrid.FindName("_vectorOverlay") as Canvas;
-            _transparencyCanvas = this.FindName("_transparencyCanvas") as Canvas;
 
             // Подписка на события мыши на самом UserControl
             this.MouseLeftButtonDown += OnMouseDown;
@@ -322,28 +318,6 @@ namespace DrawProject.Controls
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         public void AddNewLayer(BitmapSource source)
         {
             ImageDocument.CreateNewImage(source);
@@ -417,27 +391,16 @@ namespace DrawProject.Controls
 
             if (e.NewValue is ImageDocument newDoc)
             {
-                canvas._rasterImage.Source = newDoc.GetCompositeImage();
-                canvas._rasterImage.Width = newDoc.Width;
-                canvas._rasterImage.Height = newDoc.Height;
+                //Сбрасывает Binding в xaml
+                //canvas._rasterImage.Source = newDoc.GetCompositeImage();
+                //canvas._rasterImage.Width = newDoc.Width;
+                //canvas._rasterImage.Height = newDoc.Height;
 
-                canvas._vectorOverlay.Width = newDoc.Width;
-                canvas._vectorOverlay.Height = newDoc.Height;
+                //canvas._vectorOverlay.Width = newDoc.Width;
+                //canvas._vectorOverlay.Height = newDoc.Height;
 
-                canvas.Width = newDoc.Width;
-                canvas.Height = newDoc.Height;
-
-                if (canvas._rasterImage != null)
-                {
-                    canvas._rasterImage.Width = newDoc.Width;
-                    canvas._rasterImage.Height = newDoc.Height;
-                }
-
-                if (canvas._transparencyCanvas != null)
-                {
-                    canvas._transparencyCanvas.Width = newDoc.Width;
-                    canvas._transparencyCanvas.Height = newDoc.Height;
-                }
+                //canvas.Width = newDoc.Width;
+                //canvas.Height = newDoc.Height;
 
                 canvas._vectorOverlay.Children.Clear();
             }
@@ -447,15 +410,6 @@ namespace DrawProject.Controls
                 canvas._vectorOverlay.Children.Clear();
             }
         }
-
-        public void RefreshRasterImage()
-        {
-            if (ImageDocument != null)
-            {
-                _rasterImage.Source = ImageDocument.GetCompositeImage();
-            }
-        }
-
         public Canvas GetVectorOverlay() => _vectorOverlay;
         public Image GetRasterImage() => _rasterImage;
 

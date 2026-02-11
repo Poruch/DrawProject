@@ -1,11 +1,13 @@
-﻿using System.Collections.ObjectModel;
+﻿using DrawProject.ViewModels;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 
 namespace DrawProject.Models
 {
-    public class ImageDocument : IDisposable
+    public class ImageDocument : ObservableObject, IDisposable
     {
         // === ДАННЫЕ ИЗОБРАЖЕНИЯ ===
         bool _wasChanged = false;
@@ -16,10 +18,39 @@ namespace DrawProject.Models
         private bool isUnSaved = false;
         public WriteableBitmap ActiveSource => SelectedLayerIndex >= 0 ? _layers[SelectedLayerIndex].Source : null;
         public Layer SelectedLayer => SelectedLayerIndex >= 0 ? _layers[SelectedLayerIndex] : null;
-        public int Width { get; private set; }
-        public int Height { get; private set; }
+        private int _width = 0;
+        public int Width
+        {
+            get => _width;
+            set
+            {
+                if (_width != value)
+                {
+                    _width = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private int _height = 0;
+        public int Height
+        {
+            get => _height;
+            set
+            {
+                if (_height != value)
+                {
+                    _height = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         public bool WasChanged { get => _wasChanged; set => _wasChanged = value; }
-        public int SelectedLayerIndex { get => _selectedLayerIndex; set => _selectedLayerIndex = (int)Math.Clamp(value, -1, _layers.Count - 1); }
+        public int SelectedLayerIndex
+        {
+            get => _selectedLayerIndex;
+            set => _selectedLayerIndex = (int)Math.Clamp(value, -1, _layers.Count - 1);
+        }
         public bool IsUnSaved { get => isUnSaved; set => isUnSaved = value; }
 
         // Предвычисленные значения
@@ -43,6 +74,7 @@ namespace DrawProject.Models
             _rasterBuffer = new byte[_bufferSize]; // ← Кэшируем raster буфер
 
             AddNewLayer();
+            WasChanged = true;
         }
         public void AddNewLayer()
         {
@@ -95,6 +127,7 @@ namespace DrawProject.Models
             _layers[SelectedLayerIndex].Source.WritePixels(new Int32Rect(0, 0, Width, Height),
                     clearPixels, _stride, 0);
             isUnSaved = true;
+            WasChanged = true;
         }
 
         public void ClearDocument()
@@ -102,18 +135,21 @@ namespace DrawProject.Models
             SelectedLayerIndex = -1;
             _layers.Clear();
             isUnSaved = true;
+            WasChanged = true;
         }
 
         public void CreateNewImage(BitmapSource source)
         {
             ClearDocument();
             AddNewLayer(source);
+            WasChanged = true;
         }
         public void CreateNewImage(int width, int height)
         {
             ClearDocument();
             Width = width;
             Height = height;
+            WasChanged = true;
         }
         private byte[] GetPixelsFromBitmapSource(BitmapSource source)
         {
@@ -186,6 +222,7 @@ namespace DrawProject.Models
                 result[i + 3] = Math.Max(result[i + 3], layer[i + 3]);
             }
             isUnSaved = true;
+            WasChanged = true;
         }
 
         // === ПЕРЕНОС ВЕКТОРА В РАСТР ===
@@ -213,6 +250,7 @@ namespace DrawProject.Models
             _layers[SelectedLayerIndex].UpdatePixels(new Int32Rect(0, 0, Width, Height),
                 _rasterBuffer, _stride);
             isUnSaved = true;
+            WasChanged = true;
         }
 
         private void ApplyBrush(byte[] rasterPixels, byte[] vectorPixels)
@@ -249,6 +287,7 @@ namespace DrawProject.Models
                 }
             }
             isUnSaved = true;
+            WasChanged = true;
         }
 
         private void ApplyEraser(byte[] rasterPixels, byte[] vectorPixels)
@@ -264,8 +303,21 @@ namespace DrawProject.Models
                 }
             }
             isUnSaved = true;
+            WasChanged = true;
         }
 
+
+        /// <summary>
+        /// Изменяет размер документа (растягивает изображение)
+        /// </summary>
+        public void Resize(int newWidth, int newHeight)
+        {
+            Width = newWidth; Height = newHeight;
+            for (int i = 0; i < _layers.Count; i++)
+            {
+                _layers[i].Resize(newWidth, newHeight);
+            }
+        }
 
         // === IDisposable для освобождения ресурсов ===
         private bool _disposed = false;

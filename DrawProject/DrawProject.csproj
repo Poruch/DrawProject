@@ -20,4 +20,10 @@
     <Resource Include="Resources\checkerboard.png" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Controls\ImageSizeDialog.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+
 </Project>

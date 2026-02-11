@@ -8,39 +8,38 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <UserControl.Resources />
+
     <Grid>
+        <!--  Главный контейнер с фиксированным размером  -->
         <Canvas
-            x:Name="_transparencyCanvas"
+            x:Name="_mainContainer"
             Width="{Binding ImageDocument.Width, RelativeSource={RelativeSource AncestorType=UserControl}}"
             Height="{Binding ImageDocument.Height, RelativeSource={RelativeSource AncestorType=UserControl}}"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            MouseWheel="OnCanvasMouseWheel">
-            <!--  1. Фон (красный для теста)  -->
+            ClipToBounds="True">
 
-            <!--  Видно ли красный?  -->
-            <!--  Установите Width и Height или привяжите к Canvas  -->
+            <!--  1. Фон (шахматка)  -->
             <Rectangle
+                x:Name="backgroundRect"
                 Width="{Binding ImageDocument.Width, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 Height="{Binding ImageDocument.Height, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Center"
                 Fill="{StaticResource CheckerboardBrush}" />
+
+            <!--  2. Растровое изображение  -->
+            <Image
+                x:Name="_rasterImage"
+                Width="{Binding ImageDocument.Width, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Height="{Binding ImageDocument.Height, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Stretch="None" />
+
+            <!--  3. Векторный слой  -->
+            <Canvas
+                x:Name="_vectorOverlay"
+                Width="{Binding ImageDocument.Width, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Height="{Binding ImageDocument.Height, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Background="Transparent" />
+
         </Canvas>
-
-        <!--  Слой 2: Растровое изображение  -->
-        <Image
-            x:Name="_rasterImage"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Stretch="None" />
-
-        <!--  Слой 3: Векторный слой (прозрачный)  -->
-        <Canvas
-            x:Name="_vectorOverlay"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Background="Transparent" />
     </Grid>
 </UserControl>
