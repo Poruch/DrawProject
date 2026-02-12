@@ -49,7 +49,10 @@ namespace DrawProject.Controls
         public ImageDocument ImageDocument
         {
             get => (ImageDocument)GetValue(ImageDocumentProperty);
-            set => SetValue(ImageDocumentProperty, value);
+            set
+            {
+                SetValue(ImageDocumentProperty, value);
+            }
         }
 
 
@@ -402,6 +405,7 @@ namespace DrawProject.Controls
                 //canvas.Width = newDoc.Width;
                 //canvas.Height = newDoc.Height;
 
+                newDoc.DocumenWasChanged += canvas.CommitDrawing;
                 canvas._vectorOverlay.Children.Clear();
             }
             else if (e.NewValue == null)
