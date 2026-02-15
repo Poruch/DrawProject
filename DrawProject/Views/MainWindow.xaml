@@ -1,23 +1,26 @@
-﻿<Window
+﻿<fluent:RibbonWindow
     x:Class="DrawProject.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalon="http://schemas.xceed.com/wpf/xaml/avalondock"
     xmlns:controls="clr-namespace:DrawProject.Controls"
     xmlns:converters="clr-namespace:DrawProject.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluent="urn:fluent-ribbon"
     xmlns:local="clr-namespace:DrawProject"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:DrawProject.ViewModels"
     Title="MainWindow"
-    Width="834"
-    Height="452"
+    Width="900"
+    Height="500"
+    KeyDown="MainWindow_KeyDown"
     mc:Ignorable="d">
 
-    <Window.DataContext>
+    <fluent:RibbonWindow.DataContext>
         <vm:MainViewModel />
-    </Window.DataContext>
+    </fluent:RibbonWindow.DataContext>
 
-    <Window.Resources>
+    <fluent:RibbonWindow.Resources>
         <converters:ColorConverter x:Key="ColorConverter" />
         <converters:ObjectToBoolConverter x:Key="ObjectToBoolConverter" />
         <DropShadowEffect
@@ -26,9 +29,9 @@
             Opacity="0.3"
             ShadowDepth="2"
             Color="Black" />
-    </Window.Resources>
-    <Window.InputBindings>
-        <!--  File  -->
+    </fluent:RibbonWindow.Resources>
+
+    <fluent:RibbonWindow.InputBindings>
         <KeyBinding
             Key="N"
             Command="{Binding CreateCommand}"
@@ -49,8 +52,6 @@
             Key="R"
             Command="{Binding ResizeCommand}"
             Modifiers="Control" />
-
-        <!--  Edit / Layers  -->
         <KeyBinding Key="Delete" Command="{Binding ClearCommand}" />
         <KeyBinding
             Key="N"
@@ -64,37 +65,23 @@
             Key="OemCloseBrackets"
             Command="{Binding MoveLayerUpCommand}"
             Modifiers="Control" />
-        <!--  Ctrl+]  -->
         <KeyBinding
             Key="OemOpenBrackets"
             Command="{Binding MoveLayerDownCommand}"
             Modifiers="Control" />
-        <!--  Ctrl+[  -->
-
-        <!--  View  -->
         <KeyBinding
             Key="D0"
-            Command="{Binding ResetPanelSizesCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+            Command="{Binding ResetPanelSizesCommand, RelativeSource={RelativeSource AncestorType=fluent:RibbonWindow}}"
             Modifiers="Control" />
-        <!--  Ctrl+0  -->
+    </fluent:RibbonWindow.InputBindings>
 
-        <!--  Tools (примеры - добавьте команды в ViewModel)  -->
-        <KeyBinding Key="B" Command="{Binding SelectBrushToolCommand}" />
-        <KeyBinding Key="E" Command="{Binding SelectEraserToolCommand}" />
-        <KeyBinding Key="Space" Command="{Binding TogglePanModeCommand}" />
-
-        <!--  Help  -->
-        <KeyBinding Key="F1" Command="{Binding ShowAboutCommand}" />
-    </Window.InputBindings>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <!--  Панель инструментов  -->
             <RowDefinition Height="*" />
-            <!--  Основное содержимое  -->
         </Grid.RowDefinitions>
 
-        <!--  === Popup "О программе" (остаётся как есть) ===  -->
+        <!--  Popup "О программе"  -->
         <Popup
             x:Name="aboutPopup"
             AllowsTransparency="True"
@@ -164,374 +151,220 @@
             </Border>
         </Popup>
 
-        <!--  === Верхняя панель инструментов ===  -->
-        <ToolBar Grid.Row="0" Background="#F0F0F0">
-            <DockPanel HorizontalAlignment="Stretch" LastChildFill="True">
-                <!--  Левая часть: меню  -->
-                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                    <Menu>
-                        <MenuItem Header="_File">
-                            <MenuItem
-                                Command="{Binding CreateCommand}"
-                                Header="_New"
-                                InputGestureText="Ctrl+N" />
-                            <MenuItem
-                                Command="{Binding OpenCommand}"
-                                Header="_Open..."
-                                InputGestureText="Ctrl+O" />
-                            <MenuItem
-                                Command="{Binding ResizeCommand}"
-                                Header="_Resize..."
-                                InputGestureText="Ctrl+R"
-                                IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
-                            <MenuItem
-                                Command="{Binding SaveCommand}"
-                                Header="_Save"
-                                InputGestureText="Ctrl+S"
-                                IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
-                            <MenuItem
-                                Command="{Binding SaveAsCommand}"
-                                Header="Save _As..."
-                                InputGestureText="Ctrl+Shift+S"
-                                IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
-                            <Separator />
-                            <MenuItem Header="E_xit" InputGestureText="Alt+F4" />
-                        </MenuItem>
+        <!--  Лента  -->
+        <fluent:Ribbon
+            x:Name="MainRibbon"
+            Grid.Row="0"
+            Height="Auto">
+            <fluent:Ribbon.Resources>
+                <Style TargetType="fluent:RibbonTabItem">
+                    <Setter Property="Height" Value="Auto" />
+                    <Setter Property="VerticalAlignment" Value="Stretch" />
+                    <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                </Style>
+                <Style TargetType="fluent:RibbonGroupBox">
+                    <Setter Property="Height" Value="Auto" />
+                    <Setter Property="VerticalAlignment" Value="Stretch" />
+                    <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                </Style>
+            </fluent:Ribbon.Resources>
 
-                        <MenuItem Header="_View">
-                            <MenuItem
-                                Command="{Binding ResetPanelSizesCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                Header="_Reset Panels"
-                                InputGestureText="Ctrl+0" />
-                        </MenuItem>
-
-                        <MenuItem Header="_Help">
-                            <MenuItem
-                                Command="{Binding ShowAboutCommand}"
-                                Header="_About..."
-                                InputGestureText="F1" />
-                        </MenuItem>
-                    </Menu>
-
-                    <Menu>
-                        <MenuItem x:Name="ToolBox" Header="Tools" />
-                    </Menu>
-
-                    <Menu>
-                        <MenuItem Header="Layers">
-                            <MenuItem Command="{Binding ClearCommand}" Header="Clear" />
-                        </MenuItem>
-                    </Menu>
-
-                    <Menu>
-                        <MenuItem Header="View">
-                            <MenuItem Command="{Binding ResetPanelSizesCommand, RelativeSource={RelativeSource AncestorType=Window}}" Header="Сбросить панели" />
-                        </MenuItem>
-                    </Menu>
-                </StackPanel>
-            </DockPanel>
-        </ToolBar>
-
-        <!--  === Основное содержимое (3 колонки) ===  -->
-        <!--  === Основное содержимое с регулируемыми панелями ===  -->
-        <Grid x:Name="MainContentGrid" Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <!--  Левая панель (инструменты, цвета)  -->
-                <ColumnDefinition
-                    x:Name="LeftColumn"
-                    Width="150"
-                    MinWidth="80"
-                    MaxWidth="300" />
-
-                <!--  Левый разделитель  -->
-                <ColumnDefinition Width="5" />
-
-                <!--  Центр (холст)  -->
-                <ColumnDefinition Width="*" MinWidth="200" />
-
-                <!--  Правый разделитель  -->
-                <ColumnDefinition Width="5" />
-
-                <!--  Правая панель (слои)  -->
-                <ColumnDefinition
-                    x:Name="RightColumn"
-                    Width="150"
-                    MinWidth="100"
-                    MaxWidth="250" />
-            </Grid.ColumnDefinitions>
-
-            <!--  Левая панель: цвет + размер кисти (БЕЗ ColumnSpan!)  -->
-            <ScrollViewer
-                Grid.Column="0"
-                Margin="5"
-                HorizontalScrollBarVisibility="Disabled"
-                VerticalScrollBarVisibility="Auto">
-                <StackPanel Margin="5">
-                    <Border
-                        Margin="0,0,0,10"
-                        Background="White"
-                        BorderBrush="LightGray"
-                        BorderThickness="1"
-                        CornerRadius="3">
-                        <TabControl BorderThickness="0" TabStripPlacement="Top">
-                            <TabItem Header="RGBA">
-                                <Border Padding="5">
-                                    <Viewbox Stretch="Uniform">
-                                        <controls:ColorSlider x:Name="ColorSliders" ColorChangedCommand="{Binding ColorWheelChanged}" />
-                                    </Viewbox>
-                                </Border>
-                            </TabItem>
-                            <TabItem Header="HSL">
-                                <Border Padding="5">
-                                    <Viewbox Stretch="Uniform">
-                                        <controls:ColorSlider ColorChangedCommand="{Binding ColorWheelChanged}" />
-                                    </Viewbox>
-                                </Border>
-                            </TabItem>
-                        </TabControl>
-                    </Border>
-
-                    <Border
-                        Padding="10,5"
-                        Background="White"
-                        BorderBrush="LightGray"
-                        BorderThickness="1"
-                        CornerRadius="3">
-                        <StackPanel>
-                            <TextBlock Margin="0,0,0,5" Text="Brush size:" />
-                            <Slider
-                                Maximum="100"
-                                Minimum="1"
-                                TickFrequency="5"
-                                TickPlacement="BottomRight"
-                                Value="{Binding BrushSize, Mode=TwoWay}">
-                                <Slider.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                        <GradientStop Offset="0" Color="White" />
-                                        <GradientStop Offset="1" Color="Black" />
-                                    </LinearGradientBrush>
-                                </Slider.Background>
-                            </Slider>
-                            <TextBlock
-                                HorizontalAlignment="Center"
-                                FontSize="12"
-                                Text="{Binding BrushSize, StringFormat={}{0:F0}}" />
-                        </StackPanel>
-                    </Border>
-
-                    <TextBlock
-                        Margin="0,10,0,0"
-                        Padding="8,5"
-                        Background="#F8F8F8"
-                        FontSize="11">
-                        <Run Text="{Binding ActiveTool.Name, FallbackValue=Кисть}" />
-                        <Run Foreground="#666666" Text=" (" />
-                        <Run Text="{Binding MousePosition.X, StringFormat={}{0:F0}, FallbackValue=0}" />
-                        <Run Text="," />
-                        <Run Text="{Binding MousePosition.Y, StringFormat={}{0:F0}, FallbackValue=0}" />
-                        <Run Foreground="#666666" Text=")" />
-                    </TextBlock>
-
-                    <TextBlock
-                        Margin="0,0,0,10"
-                        Padding="8,5"
-                        Background="#F8F8F8"
-                        FontSize="11">
-                        <Run Foreground="#666666" Text="Размер: " />
-                        <Run Text="{Binding CurrentDoc.Width, FallbackValue=0, StringFormat={}{0}×}" />
-                        <Run Text="{Binding CurrentDoc.Height, FallbackValue=0}" />
-                        <Run Foreground="#666666" Text=" px" />
-                    </TextBlock>
-                </StackPanel>
-            </ScrollViewer>
-
-            <!--  Левый разделитель  -->
-            <GridSplitter
-                Grid.Column="1"
-                Width="5"
-                HorizontalAlignment="Stretch"
-                Background="#E0E0E0"
-                Cursor="SizeWE" />
-
-            <!--  Центр: холст (БЕЗ ColumnSpan!)  -->
-            <Border
-                Grid.Column="2"
-                Margin="5"
-                Background="#F8F8F8"
-                BorderBrush="LightGray"
-                BorderThickness="1">
-                <controls:ZoomBorder x:Name="zoomBorder">
-                    <controls:HybridCanvas
-                        x:Name="drawingCanvas"
-                        Width="{Binding CurrentDoc.Width}"
-                        Height="{Binding CurrentDoc.Height}"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Brush="{Binding CurrentBrush}"
-                        ImageDocument="{Binding CurrentDoc}"
-                        Loaded="DrawingCanvas_Loaded"
-                        Tool="{Binding ActiveTool}" />
-                </controls:ZoomBorder>
-            </Border>
-
-            <!--  Правый разделитель  -->
-            <GridSplitter
-                Grid.Column="3"
-                Width="5"
-                HorizontalAlignment="Stretch"
-                Background="#E0E0E0"
-                Cursor="SizeWE" />
-
-            <!--  Правая панель: слои  -->
-            <Border
-                Grid.Column="4"
-                Margin="5"
-                Background="White"
-                BorderBrush="LightGray"
-                BorderThickness="1">
-                <DockPanel>
-                    <Border
-                        Padding="10,5"
-                        Background="#F0F0F0"
-                        BorderBrush="LightGray"
-                        BorderThickness="0,0,0,1"
-                        DockPanel.Dock="Top">
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            FontWeight="Bold"
-                            Text="Layers" />
-                    </Border>
-
-                    <StackPanel
-                        Margin="5"
-                        HorizontalAlignment="Center"
-                        DockPanel.Dock="Bottom"
-                        Orientation="Horizontal">
-                        <Button
-                            Width="30"
-                            Command="{Binding AddLayerCommand}"
-                            Content="+"
-                            ToolTip="Add new layer" />
-                        <Button
-                            Width="30"
-                            Margin="5,0,0,0"
-                            Command="{Binding RemoveLayerCommand}"
-                            Content="-"
-                            ToolTip="Remove selected layer" />
+            <fluent:RibbonTabItem Height="Auto" Header="File">
+                <fluent:RibbonGroupBox
+                    Height="88"
+                    Background="Gray"
+                    Header="Document">
+                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                        <fluent:Button
+                            MinHeight="60"
+                            Margin="2"
+                            Background="White"
+                            Command="{Binding CreateCommand}"
+                            Header="New"
+                            SizeDefinition="Middle" />
+                        <fluent:Button
+                            MinHeight="60"
+                            Margin="2"
+                            Background="White"
+                            Command="{Binding OpenCommand}"
+                            Header="Open"
+                            SizeDefinition="Middle" />
+                        <fluent:Button
+                            MinHeight="60"
+                            Margin="2"
+                            Background="White"
+                            Command="{Binding SaveCommand}"
+                            Header="Save"
+                            IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}"
+                            SizeDefinition="Middle" />
+                        <fluent:Button
+                            MinHeight="60"
+                            Margin="2"
+                            Background="White"
+                            Command="{Binding SaveAsCommand}"
+                            Header="Save As"
+                            IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}"
+                            SizeDefinition="Middle" />
+                        <fluent:Button
+                            MinHeight="60"
+                            Margin="2"
+                            Background="White"
+                            Command="{Binding ResizeCommand}"
+                            Header="Resize"
+                            IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}"
+                            SizeDefinition="Middle" />
+                        <fluent:Button
+                            MinHeight="60"
+                            Margin="2"
+                            Background="White"
+                            Click="ExitButton_Click"
+                            Header="Exit"
+                            SizeDefinition="Middle" />
                     </StackPanel>
+                </fluent:RibbonGroupBox>
+            </fluent:RibbonTabItem>
 
-                    <ListBox
-                        x:Name="layersListBox"
-                        BorderThickness="0"
-                        ItemsSource="{Binding Layers}"
-                        ScrollViewer.VerticalScrollBarVisibility="Auto"
-                        SelectedIndex="{Binding SelectedLayerIndex}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Border
-                                    Margin="2"
-                                    Padding="3"
-                                    Background="Transparent"
-                                    CornerRadius="3">
-                                    <DockPanel Height="40">
-                                        <Border
-                                            Width="30"
-                                            Height="30"
-                                            Margin="0,0,5,0"
-                                            BorderBrush="#CCCCCC"
-                                            BorderThickness="1"
-                                            CornerRadius="3"
-                                            DockPanel.Dock="Left">
-                                            <Grid>
-                                                <Rectangle Fill="White" />
-                                                <Image Source="{Binding Source}" Stretch="UniformToFill" />
-                                                <TextBlock
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    FontSize="9"
-                                                    Foreground="Gray"
-                                                    Text="IMG"
-                                                    Visibility="{Binding Source, Converter={StaticResource ObjectToBoolConverter}}" />
-                                            </Grid>
-                                        </Border>
+            <fluent:RibbonTabItem Height="Auto" Header="Layers">
+                <fluent:RibbonGroupBox Height="Auto" Header="Manage">
+                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                        <fluent:Button
+                            MinHeight="60"
+                            Margin="2"
+                            Command="{Binding AddLayerCommand}"
+                            Header="Add"
+                            SizeDefinition="Middle" />
+                        <fluent:Button
+                            MinHeight="60"
+                            Margin="2"
+                            Command="{Binding RemoveLayerCommand}"
+                            Header="Remove"
+                            SizeDefinition="Middle" />
+                        <fluent:Button
+                            MinHeight="60"
+                            Margin="2"
+                            Command="{Binding ClearCommand}"
+                            Header="Clear"
+                            SizeDefinition="Middle" />
+                    </StackPanel>
+                </fluent:RibbonGroupBox>
+            </fluent:RibbonTabItem>
 
-                                        <Button
-                                            Padding="5,0"
-                                            HorizontalAlignment="Stretch"
-                                            HorizontalContentAlignment="Left"
-                                            Background="Transparent"
-                                            BorderThickness="0"
-                                            Command="{Binding DataContext.SelectLayerCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                            CommandParameter="{Binding}"
-                                            Content="{Binding Name}">
-                                            <Button.Style>
-                                                <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="Button">
-                                                                <Border Background="Transparent" CornerRadius="2">
-                                                                    <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" />
-                                                                </Border>
-                                                                <ControlTemplate.Triggers>
-                                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                                        <Setter Property="Background" Value="#F0F0F0" />
-                                                                    </Trigger>
-                                                                </ControlTemplate.Triggers>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                </Style>
-                                            </Button.Style>
-                                        </Button>
+            <fluent:RibbonTabItem Height="Auto" Header="View">
+                <fluent:RibbonGroupBox Height="Auto" Header="Layout">
+                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                        <fluent:Button
+                            MinHeight="60"
+                            Margin="2"
+                            Command="{Binding ResetPanelSizesCommand, RelativeSource={RelativeSource AncestorType=fluent:RibbonWindow}}"
+                            Header="Reset"
+                            SizeDefinition="Middle" />
+                    </StackPanel>
+                </fluent:RibbonGroupBox>
+            </fluent:RibbonTabItem>
 
-                                        <StackPanel
-                                            Width="25"
-                                            DockPanel.Dock="Right"
-                                            Orientation="Vertical">
-                                            <Button
-                                                Height="15"
-                                                Command="{Binding DataContext.MoveLayerUpCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                                CommandParameter="{Binding}"
-                                                Content="↑"
-                                                FontSize="8"
-                                                ToolTip="Move up" />
-                                            <Button
-                                                Height="15"
-                                                Margin="0,2,0,0"
-                                                Command="{Binding DataContext.MoveLayerDownCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                                CommandParameter="{Binding}"
-                                                Content="↓"
-                                                FontSize="8"
-                                                ToolTip="Move down" />
-                                        </StackPanel>
-                                    </DockPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
+            <fluent:RibbonTabItem Height="Auto" Header="Tools">
+                <fluent:RibbonGroupBox
+                    x:Name="ToolsGroup"
+                    Height="Auto"
+                    Header="Tools">
+                    <StackPanel
+                        x:Name="ToolsPanel"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal" />
+                </fluent:RibbonGroupBox>
+            </fluent:RibbonTabItem>
 
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="Padding" Value="0" />
-                                <Setter Property="Background" Value="Transparent" />
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="ListBoxItem">
-                                            <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
-                                                <ContentPresenter />
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsSelected" Value="True">
-                                                    <Setter Property="Background" Value="#E3F2FD" />
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-                    </ListBox>
-                </DockPanel>
-            </Border>
-        </Grid>
+            <fluent:RibbonTabItem Height="Auto" Header="Help">
+                <fluent:RibbonGroupBox Height="Auto" Header="Info">
+                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                        <fluent:Button
+                            MinHeight="60"
+                            Margin="2"
+                            Click="OpenProgrammInfo"
+                            Header="About"
+                            SizeDefinition="Middle" />
+                    </StackPanel>
+                </fluent:RibbonGroupBox>
+            </fluent:RibbonTabItem>
+        </fluent:Ribbon>
+
+        <!--  Единый DockingManager для всех панелей (обеспечивает перетаскивание)  -->
+        <avalon:DockingManager x:Name="dockManager" Grid.Row="1">
+            <avalon:DockingManager.Theme>
+                <avalon:VS2010Theme />
+            </avalon:DockingManager.Theme>
+
+            <avalon:LayoutRoot>
+                <avalon:LayoutPanel Orientation="Horizontal">
+
+                    <!--  Левая панель (инструменты)  -->
+                    <avalon:LayoutAnchorablePane DockMinWidth="150" DockWidth="2*">
+                        <avalon:LayoutAnchorable
+                            Title="Инструменты"
+                            AutoHideWidth="200"
+                            CanClose="False"
+                            CanFloat="True"
+                            CanHide="True"
+                            ContentId="ToolsPane">
+                            <controls:BrushControlPanel
+                                ActiveTool="{Binding ActiveTool}"
+                                BrushColor="{Binding BrushColor, Mode=TwoWay}"
+                                BrushSize="{Binding BrushSize, Mode=TwoWay}"
+                                CurrentDoc="{Binding CurrentDoc}"
+                                MousePosition="{Binding MousePosition}" />
+                        </avalon:LayoutAnchorable>
+                    </avalon:LayoutAnchorablePane>
+
+                    <!--  Центральная панель (холст)  -->
+                    <avalon:LayoutDocumentPane DockMinWidth="300" DockWidth="5*">
+                        <avalon:LayoutDocument
+                            Title="Холст"
+                            CanClose="False"
+                            CanFloat="False"
+                            ContentId="MainCanvas">
+                            <Border
+                                Background="#F8F8F8"
+                                BorderBrush="LightGray"
+                                BorderThickness="1">
+                                <controls:ZoomBorder x:Name="zoomBorder">
+                                    <controls:HybridCanvas
+                                        x:Name="drawingCanvas"
+                                        Width="{Binding CurrentDoc.Width}"
+                                        Height="{Binding CurrentDoc.Height}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Brush="{Binding CurrentBrush}"
+                                        ImageDocument="{Binding CurrentDoc}"
+                                        Loaded="DrawingCanvas_Loaded"
+                                        Tool="{Binding ActiveTool}" />
+                                </controls:ZoomBorder>
+                            </Border>
+                        </avalon:LayoutDocument>
+                    </avalon:LayoutDocumentPane>
+
+                    <!--  Правая панель (слои)  -->
+                    <avalon:LayoutAnchorablePane DockMinWidth="150" DockWidth="2*">
+                        <avalon:LayoutAnchorable
+                            Title="Слои"
+                            AutoHideWidth="200"
+                            CanClose="False"
+                            CanFloat="True"
+                            CanHide="True"
+                            ContentId="LayersPane">
+                            <controls:LayersPanelControl
+                                AddLayerCommand="{Binding AddLayerCommand}"
+                                Layers="{Binding Layers}"
+                                MoveLayerDownCommand="{Binding MoveLayerDownCommand}"
+                                MoveLayerUpCommand="{Binding MoveLayerUpCommand}"
+                                RemoveLayerCommand="{Binding RemoveLayerCommand}"
+                                SelectLayerCommand="{Binding SelectLayerCommand}"
+                                SelectedLayerIndex="{Binding SelectedLayerIndex}" />
+                        </avalon:LayoutAnchorable>
+                    </avalon:LayoutAnchorablePane>
+
+                </avalon:LayoutPanel>
+            </avalon:LayoutRoot>
+        </avalon:DockingManager>
+
     </Grid>
-</Window>
+</fluent:RibbonWindow>

@@ -102,28 +102,37 @@ namespace DrawProject.Controls
             this.MouseLeftButtonDown += OnMouseDown;
             this.MouseMove += OnMouseMove;
             this.MouseLeftButtonUp += OnMouseUp;
+
+            this.Loaded += HybridCanvas_Loaded;
+            this.Unloaded += HybridCanvas_Unloaded;
         }
 
+        private void HybridCanvas_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Если потоки ещё не запущены или были отменены – запускаем заново
+            if (_cts == null || _cts.IsCancellationRequested)
+            {
+                InitializeThreadingSystem();
+            }
+        }
+        private void HybridCanvas_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // При выгрузке останавливаем потоки, но оставляем возможность перезапуска
+            CleanupThreading();
+        }
         private void InitializeThreadingSystem()
         {
-            // 1. Инициализация очередей
+            if (_cts != null && !_cts.IsCancellationRequested)
+                return;
+
             _inputQueue = new ConcurrentQueue<MousePoint>();
             _outputQueue = new ConcurrentQueue<ProcessedPoint>();
             _cts = new CancellationTokenSource();
-
-            // 2. Запуск фоновой задачи обработки
             _processingTask = Task.Run(() => ProcessPointsBackground(_cts.Token));
 
-            // 3. Таймер для UI (60 Гц)
-            _uiTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(16)
-            };
+            _uiTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
             _uiTimer.Tick += ProcessPointsInUI;
             _uiTimer.Start();
-
-            // 4. Очистка при уничтожении
-            this.Unloaded += (s, e) => CleanupThreading();
         }
 
         // === ВВОД МЫШИ (UI поток) ===
@@ -375,16 +384,35 @@ namespace DrawProject.Controls
 
         private void CleanupThreading()
         {
-            _cts?.Cancel();
-            _uiTimer?.Stop();
-
-            try
+            if (_cts != null)
             {
-                _processingTask?.Wait(1000);
+                _cts.Cancel();
+                try
+                {
+                    _processingTask?.Wait(1000); // ждём завершения фоновой задачи
+                }
+                catch (AggregateException ex)
+                {
+                    // Игнорируем ожидаемое исключение отмены
+                    if (ex.InnerException is OperationCanceledException)
+                        Debug.WriteLine("Background task cancelled.");
+                    else
+                        Debug.WriteLine($"Error stopping background task: {ex.Message}");
+                }
+                finally
+                {
+                    _cts.Dispose();
+                    _cts = null;
+                    _processingTask = null;
+                }
             }
-            catch { }
 
-            _cts?.Dispose();
+            if (_uiTimer != null)
+            {
+                _uiTimer.Stop();
+                _uiTimer.Tick -= ProcessPointsInUI;
+                _uiTimer = null;
+            }
         }
 
         // === ОСТАЛЬНЫЕ МЕТОДЫ ===

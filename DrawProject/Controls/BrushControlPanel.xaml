@@ -1,0 +1,101 @@
+﻿<UserControl
+    x:Class="DrawProject.Controls.BrushControlPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:DrawProject.Controls"
+    xmlns:converters="clr-namespace:DrawProject.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:DrawProject.ViewModels"
+    d:DesignHeight="400"
+    d:DesignWidth="250"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:ObjectToBoolConverter x:Key="ObjectToBoolConverter" />
+    </UserControl.Resources>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="5">
+            <!--  Блок выбора цвета  -->
+            <Border
+                Margin="0,0,0,10"
+                Background="White"
+                BorderBrush="LightGray"
+                BorderThickness="1"
+                CornerRadius="3">
+                <TabControl BorderThickness="0" TabStripPlacement="Top">
+                    <TabItem Header="RGBA">
+                        <Border Padding="5">
+                            <Viewbox Stretch="Uniform">
+                                <controls:ColorSlider x:Name="ColorSliders" SelectedColor="{Binding BrushColor, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"/>
+                            </Viewbox>
+                        </Border>
+                    </TabItem>
+                    <TabItem Header="HSL">
+                        <Border Padding="5">
+                            <Viewbox Stretch="Uniform">
+                                <controls:ColorSlider/>
+                            </Viewbox>
+                        </Border>
+                    </TabItem>
+                </TabControl>
+            </Border>
+
+            <!--  Размер кисти  -->
+            <Border
+                Padding="10,5"
+                Background="White"
+                BorderBrush="LightGray"
+                BorderThickness="1"
+                CornerRadius="3">
+                <StackPanel>
+                    <TextBlock Margin="0,0,0,5" Text="Brush size:" />
+                    <Slider
+                        Maximum="100"
+                        Minimum="1"
+                        TickFrequency="5"
+                        TickPlacement="BottomRight"
+                        Value="{Binding BrushSize, Mode=TwoWay, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                        <Slider.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Offset="0" Color="White" />
+                                <GradientStop Offset="1" Color="Black" />
+                            </LinearGradientBrush>
+                        </Slider.Background>
+                    </Slider>
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Text="{Binding BrushSize, RelativeSource={RelativeSource AncestorType=UserControl}, StringFormat={}{0:F0}}" />
+                </StackPanel>
+            </Border>
+
+            <!--  Информация об активном инструменте  -->
+            <TextBlock
+                Margin="0,10,0,0"
+                Padding="8,5"
+                Background="#F8F8F8"
+                FontSize="11">
+                <Run Text="{Binding ActiveTool.Name, FallbackValue=Кисть, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <Run Foreground="#666666" Text=" (" />
+                <Run Text="{Binding MousePosition.X, StringFormat={}{0:F0}, FallbackValue=0, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <Run Text="," />
+                <Run Text="{Binding MousePosition.Y, StringFormat={}{0:F0}, FallbackValue=0, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <Run Foreground="#666666" Text=")" />
+            </TextBlock>
+
+            <!--  Размер документа  -->
+            <TextBlock
+                Margin="0,0,0,10"
+                Padding="8,5"
+                Background="#F8F8F8"
+                FontSize="11">
+                <Run Foreground="#666666" Text="Размер: " />
+                <Run Text="{Binding CurrentDoc.Width, FallbackValue=0, StringFormat={}{0}×, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <Run Text="{Binding CurrentDoc.Height, FallbackValue=0, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <Run Foreground="#666666" Text=" px" />
+            </TextBlock>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

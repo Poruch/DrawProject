@@ -3,8 +3,10 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Ribbon;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using DrawProject.Attributes;
 using DrawProject.Controls;
 using DrawProject.Models;
@@ -117,7 +119,6 @@ namespace DrawProject.ViewModels
         // === КОМАНДЫ ===
         public ICommand ClearCommand { get; }
         public ICommand ChangeColorCommand { get; }
-        public ICommand ColorWheelChanged { get; }
 
         public ICommand SaveCommand { get; }
 
@@ -170,13 +171,15 @@ namespace DrawProject.ViewModels
             OnToolSelected(_tools.FirstOrDefault(x => x is BrushInstrument));
         }
         //Список инструментов
-
+        public void UpdateImage()
+        {
+            CurrentDoc.WasChanged = true;
+        }
         // === КОНСТРУКТОР ===
         public MainViewModel()
         {
             ClearCommand = new RelayCommand(ClearCanvas);
             ChangeColorCommand = new RelayCommand<Color>(ChangeColor);
-            ColorWheelChanged = new RelayCommand<Color>(OnColorChanged);
 
 
             SaveCommand = new RelayCommand(SaveImage);
@@ -196,6 +199,7 @@ namespace DrawProject.ViewModels
             _brush.Hardness = 0.5f;
             _brush.Shape = new SquareBrushShape();
         }
+
 
         public List<MenuItem> GenerateToolMenuItems()
         {
@@ -244,6 +248,91 @@ namespace DrawProject.ViewModels
 
 
             return menuItems;
+        }
+
+
+
+
+        public List<UIElement> GenerateToolRibbonControls()
+        {
+            var ribbonControls = new List<UIElement>();
+
+            var toolTypes = Assembly.GetExecutingAssembly()
+                .GetTypes()
+                .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Tool)))
+                .ToList();
+
+            foreach (var toolType in toolTypes)
+            {
+                if (Activator.CreateInstance(toolType) is Tool tool)
+                {
+                    _tools.Add(tool);
+
+                    var icon = LoadIconFromResource(tool.CursorPath);
+
+                    var inspectableProps = tool.GetType()
+                        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                        .Where(p => p.GetCustomAttribute<InspectableAttribute>() != null && p.CanRead && p.CanWrite)
+                        .ToList();
+
+                    if (inspectableProps.Any())
+                    {
+                        var splitButton = new RibbonSplitButton
+                        {
+                            Label = tool.Name,
+                            SmallImageSource = icon,
+                            LargeImageSource = icon,
+                            ToolTip = tool.ToolTip,
+                            Command = new RelayCommand(() => OnToolSelected(tool)),
+                            IsCheckable = false
+                        };
+
+                        var settingsItem = new RibbonMenuItem
+                        {
+                            Header = "Настройки...",
+                            Command = new RelayCommand(() => ShowSettingsWindow(tool, inspectableProps))
+                        };
+                        var settingsIcon = LoadIconFromResource("SettingsIcon.png");
+                        if (settingsIcon != null)
+                        {
+                            settingsItem.ImageSource = settingsIcon;
+                        }
+                        splitButton.Items.Add(settingsItem);
+                        ribbonControls.Add(splitButton);
+                    }
+                    else
+                    {
+                        var button = new RibbonButton
+                        {
+                            Label = tool.Name,
+                            SmallImageSource = icon,
+                            LargeImageSource = icon,
+                            ToolTip = tool.ToolTip,
+                            Command = new RelayCommand(() => OnToolSelected(tool)),
+                            Focusable = true,
+                            IsHitTestVisible = true,
+                        };
+
+                        ribbonControls.Add(button);
+                    }
+                }
+            }
+
+            return ribbonControls;
+        }
+
+        // Вспомогательный метод для загрузки иконок
+        private ImageSource LoadIconFromResource(string resourceName)
+        {
+            try
+            {
+                var uri = new Uri(resourceName, UriKind.RelativeOrAbsolute);
+                return new BitmapImage(uri);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private void ShowSettingsWindow(Tool tool, List<PropertyInfo> properties)
@@ -298,10 +387,12 @@ namespace DrawProject.ViewModels
                 // Создаем документ
                 CreateDocument((int)width, (int)height);
             }
+            UpdateImage();
         }
         private void CreateDocument(int width, int height)
         {
             CurrentDoc = new ImageDocument(width, height);
+            UpdateImage();
         }
         private void OpenImage()
         {
