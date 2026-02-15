@@ -61,6 +61,13 @@ namespace DrawProject
             );
         }
 
+        private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.F1)
+            {
+                OpenProgrammInfo(sender, null);
+            }
+        }
 
         public void OpenProgrammInfo(object sender, RoutedEventArgs e)
         {

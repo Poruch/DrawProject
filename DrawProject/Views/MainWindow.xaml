@@ -27,7 +27,65 @@
             ShadowDepth="2"
             Color="Black" />
     </Window.Resources>
+    <Window.InputBindings>
+        <!--  File  -->
+        <KeyBinding
+            Key="N"
+            Command="{Binding CreateCommand}"
+            Modifiers="Control" />
+        <KeyBinding
+            Key="O"
+            Command="{Binding OpenCommand}"
+            Modifiers="Control" />
+        <KeyBinding
+            Key="S"
+            Command="{Binding SaveCommand}"
+            Modifiers="Control" />
+        <KeyBinding
+            Key="S"
+            Command="{Binding SaveAsCommand}"
+            Modifiers="Control+Shift" />
+        <KeyBinding
+            Key="R"
+            Command="{Binding ResizeCommand}"
+            Modifiers="Control" />
 
+        <!--  Edit / Layers  -->
+        <KeyBinding Key="Delete" Command="{Binding ClearCommand}" />
+        <KeyBinding
+            Key="N"
+            Command="{Binding AddLayerCommand}"
+            Modifiers="Control+Shift" />
+        <KeyBinding
+            Key="Delete"
+            Command="{Binding RemoveLayerCommand}"
+            Modifiers="Control" />
+        <KeyBinding
+            Key="OemCloseBrackets"
+            Command="{Binding MoveLayerUpCommand}"
+            Modifiers="Control" />
+        <!--  Ctrl+]  -->
+        <KeyBinding
+            Key="OemOpenBrackets"
+            Command="{Binding MoveLayerDownCommand}"
+            Modifiers="Control" />
+        <!--  Ctrl+[  -->
+
+        <!--  View  -->
+        <KeyBinding
+            Key="D0"
+            Command="{Binding ResetPanelSizesCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+            Modifiers="Control" />
+        <!--  Ctrl+0  -->
+
+        <!--  Tools (примеры - добавьте команды в ViewModel)  -->
+        <KeyBinding Key="B" Command="{Binding SelectBrushToolCommand}" />
+        <KeyBinding Key="E" Command="{Binding SelectEraserToolCommand}" />
+        <KeyBinding Key="Space" Command="{Binding TogglePanModeCommand}" />
+
+        <!--  Help  -->
+        <KeyBinding Key="F1" Command="{Binding ShowAboutCommand}" />
+    </Window.InputBindings>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -112,23 +170,46 @@
                 <!--  Левая часть: меню  -->
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                     <Menu>
-                        <MenuItem Header="File">
-                            <MenuItem Command="{Binding CreateCommand}" Header="Create" />
-                            <MenuItem Command="{Binding OpenCommand}" Header="Open" />
+                        <MenuItem Header="_File">
+                            <MenuItem
+                                Command="{Binding CreateCommand}"
+                                Header="_New"
+                                InputGestureText="Ctrl+N" />
+                            <MenuItem
+                                Command="{Binding OpenCommand}"
+                                Header="_Open..."
+                                InputGestureText="Ctrl+O" />
                             <MenuItem
                                 Command="{Binding ResizeCommand}"
-                                Header="Resize"
+                                Header="_Resize..."
+                                InputGestureText="Ctrl+R"
                                 IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
                             <MenuItem
                                 Command="{Binding SaveCommand}"
-                                Header="Save"
+                                Header="_Save"
+                                InputGestureText="Ctrl+S"
                                 IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
                             <MenuItem
                                 Command="{Binding SaveAsCommand}"
-                                Header="Save as"
+                                Header="Save _As..."
+                                InputGestureText="Ctrl+Shift+S"
                                 IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}" />
                             <Separator />
-                            <MenuItem Header="Exit" />
+                            <MenuItem Header="E_xit" InputGestureText="Alt+F4" />
+                        </MenuItem>
+
+                        <MenuItem Header="_View">
+                            <MenuItem
+                                Command="{Binding ResetPanelSizesCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                Header="_Reset Panels"
+                                InputGestureText="Ctrl+0" />
+                        </MenuItem>
+
+                        <MenuItem Header="_Help">
+                            <MenuItem
+                                Command="{Binding ShowAboutCommand}"
+                                Header="_About..."
+                                InputGestureText="F1" />
                         </MenuItem>
                     </Menu>
 
@@ -148,13 +229,6 @@
                         </MenuItem>
                     </Menu>
                 </StackPanel>
-
-                <!--  Правая часть: кнопка "О программе"  -->
-                <Button
-                    Margin="0,0,10,0"
-                    Click="OpenProgrammInfo"
-                    Content="О программе"
-                    DockPanel.Dock="Right" />
             </DockPanel>
         </ToolBar>
 
