@@ -9,7 +9,7 @@
         <ResourceDictionary>
             <!--  1. Сначала подключаем внешние темы  -->
             <ResourceDictionary.MergedDictionaries>
-                <!-- ПРАВИЛЬНЫЙ путь для современных версий Fluent.Ribbon -->
+                <!--  ПРАВИЛЬНЫЙ путь для современных версий Fluent.Ribbon  -->
                 <ResourceDictionary Source="pack://application:,,,/Fluent;Component/Themes/Generic.xaml" />
             </ResourceDictionary.MergedDictionaries>
 

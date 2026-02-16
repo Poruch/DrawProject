@@ -48,72 +48,6 @@ namespace DrawProject.ViewModels
             }
         }
 
-        // === НАСТРОЙКИ КИСТИ ===
-        public Color BrushColor
-        {
-            get => _brush.Color;
-            set
-            {
-                if (_brush.Color != value)
-                {
-                    _brush.Color = value;
-                    OnPropertyChanged(nameof(BrushColor));
-                }
-            }
-        }
-
-        public int BrushSize
-        {
-            get => _brush.Size;
-            set
-            {
-                if (_brush.Size != value)
-                {
-                    _brush.Size = value;
-                    OnPropertyChanged(nameof(BrushSize));
-                }
-            }
-        }
-
-        public float BrushOpacity
-        {
-            get => _brush.Opacity;
-            set
-            {
-                if (_brush.Opacity != value)
-                {
-                    _brush.Opacity = value;
-                    OnPropertyChanged(nameof(BrushOpacity));
-                }
-            }
-        }
-
-        public float BrushHardness
-        {
-            get => _brush.Hardness;
-            set
-            {
-                if (_brush.Hardness != value)
-                {
-                    _brush.Hardness = value;
-                    OnPropertyChanged(nameof(BrushHardness));
-                }
-            }
-        }
-
-        public BrushShape BrushShape
-        {
-            get => _brush.Shape;
-            set
-            {
-                if (_brush.Shape != value)
-                {
-                    _brush.Shape = value;
-                    OnPropertyChanged(nameof(BrushShape));
-                }
-            }
-        }
-
         public Brush CurrentBrush => _brush;
 
         // === КОМАНДЫ ===
@@ -366,12 +300,12 @@ namespace DrawProject.ViewModels
 
         private void ChangeColor(Color color)
         {
-            BrushColor = color;
+            _brush.Color = color;
         }
 
         private void OnColorChanged(Color color)
         {
-            BrushColor = color;
+            _brush.Color = color;
         }
 
         private void OpenCreateContext()

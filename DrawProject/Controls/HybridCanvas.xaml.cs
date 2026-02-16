@@ -140,7 +140,6 @@ namespace DrawProject.Controls
         {
             if (!_isDrawing) return;
 
-            // Просто добавляем точку в очередь ввода - ОЧЕНЬ БЫСТРО!
             _inputQueue.Enqueue(new MousePoint
             {
                 Position = e.GetPosition(this),
@@ -155,37 +154,37 @@ namespace DrawProject.Controls
 
             while (!ct.IsCancellationRequested)
             {
-                try
-                {
+                //try
+                //{
 
-                    // Обрабатываем все точки из входной очереди
-                    while (_inputQueue.TryDequeue(out var currentPoint))
+                // Обрабатываем все точки из входной очереди
+                while (_inputQueue.TryDequeue(out var currentPoint))
+                {
+                    if (lastPoint.HasValue)
                     {
-                        if (lastPoint.HasValue)
-                        {
-                            // Интерполируем между точками в фоновом потоке!
-                            InterpolateBetweenPoints(lastPoint.Value, currentPoint);
-                        }
-
-                        // Добавляем оригинальную точку
-                        _outputQueue.Enqueue(new ProcessedPoint
-                        {
-                            Position = currentPoint.Position,
-                            IsInterpolated = false
-                        });
-                        lastPoint = currentPoint;
+                        // Интерполируем между точками в фоновом потоке!
+                        InterpolateBetweenPoints(lastPoint.Value, currentPoint);
                     }
-                    // Короткая пауза чтобы не грузить CPU
-                    //await Task.Delay(1, ct);
+
+                    // Добавляем оригинальную точку
+                    _outputQueue.Enqueue(new ProcessedPoint
+                    {
+                        Position = currentPoint.Position,
+                        IsInterpolated = false
+                    });
+                    lastPoint = currentPoint;
                 }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Background processing error: {ex.Message}");
-                }
+                // Короткая пауза чтобы не грузить CPU
+                //await Task.Delay(1, ct);
+                //}
+                //catch (OperationCanceledException)
+                //{
+                //    break;
+                //}
+                //catch (Exception ex)
+                //{
+                //    Debug.WriteLine($"Background processing error: {ex.Message}");
+                //}
             }
         }
 

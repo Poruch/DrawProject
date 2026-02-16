@@ -1,14 +1,28 @@
 ﻿// Models/Brush.cs
 using DrawProject.Models;
+using DrawProject.ViewModels;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows;
 using System.Windows.Shapes;
 
-public class Brush
+public class Brush : ObservableObject
 {
     // === СВОЙСТВА ===
-    public Color Color { get; set; } = Colors.Black;
+
+    private Color _color = Colors.Black;
+    public Color Color
+    {
+        get => _color;
+        set
+        {
+            if (_color != value)
+            {
+                _color = value;
+                OnPropertyChanged();
+            }
+        }
+    }
     public int Size { get; set; } = 5;
     public float Opacity { get; set; } = 1.0f;
     float hardness = 0.5f;

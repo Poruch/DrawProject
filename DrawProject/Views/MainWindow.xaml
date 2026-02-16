@@ -308,8 +308,8 @@
                             ContentId="ToolsPane">
                             <controls:BrushControlPanel
                                 ActiveTool="{Binding ActiveTool}"
-                                BrushColor="{Binding BrushColor, Mode=TwoWay}"
-                                BrushSize="{Binding BrushSize, Mode=TwoWay}"
+                                BrushColor="{Binding CurrentBrush.Color, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                BrushSize="{Binding CurrentBrush.Size, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 CurrentDoc="{Binding CurrentDoc}"
                                 MousePosition="{Binding MousePosition}" />
                         </avalon:LayoutAnchorable>
