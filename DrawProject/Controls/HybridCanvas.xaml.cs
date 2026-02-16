@@ -43,8 +43,8 @@ namespace DrawProject.Controls
             set => SetValue(ToolProperty, value);
         }
 
-        private bool _blend = true;
-        public bool Blend { get => _blend; set => _blend = value; }
+        private bool _useBlend = true;
+        public bool UseBlend { get => _useBlend; set => _useBlend = value; }
 
         public ImageDocument ImageDocument
         {
@@ -117,7 +117,6 @@ namespace DrawProject.Controls
         }
         private void HybridCanvas_Unloaded(object sender, RoutedEventArgs e)
         {
-            // При выгрузке останавливаем потоки, но оставляем возможность перезапуска
             CleanupThreading();
         }
         private void InitializeThreadingSystem()
@@ -151,13 +150,8 @@ namespace DrawProject.Controls
         private async Task ProcessPointsBackground(CancellationToken ct)
         {
 
-
             while (!ct.IsCancellationRequested)
             {
-                //try
-                //{
-
-                // Обрабатываем все точки из входной очереди
                 while (_inputQueue.TryDequeue(out var currentPoint))
                 {
                     if (lastPoint.HasValue)
@@ -165,7 +159,7 @@ namespace DrawProject.Controls
                         // Интерполируем между точками в фоновом потоке!
                         InterpolateBetweenPoints(lastPoint.Value, currentPoint);
                     }
-
+                    //await Task.Delay(1, ct);
                     // Добавляем оригинальную точку
                     _outputQueue.Enqueue(new ProcessedPoint
                     {
@@ -174,17 +168,6 @@ namespace DrawProject.Controls
                     });
                     lastPoint = currentPoint;
                 }
-                // Короткая пауза чтобы не грузить CPU
-                //await Task.Delay(1, ct);
-                //}
-                //catch (OperationCanceledException)
-                //{
-                //    break;
-                //}
-                //catch (Exception ex)
-                //{
-                //    Debug.WriteLine($"Background processing error: {ex.Message}");
-                //}
             }
         }
 
@@ -236,7 +219,6 @@ namespace DrawProject.Controls
         {
             if (!_isDrawing || Tool == null) return;
 
-            // Обрабатываем до 20 точек за кадр
             int pointsProcessed = 0;
             const int maxPointsPerFrame = 40;
 
@@ -260,15 +242,12 @@ namespace DrawProject.Controls
 
             _isDrawing = true;
 
-            // Очищаем очереди
             ClearQueues();
 
-            // Первая точка - рисуем сразу в UI
             var point = e.GetPosition(this);
             var context = new InstrumentContext(this, e, default);
             Tool?.OnMouseDown(context);
 
-            // Также добавляем в очередь для обработки
             _inputQueue.Enqueue(new MousePoint
             {
                 Position = point,
@@ -320,26 +299,11 @@ namespace DrawProject.Controls
             e.Handled = true; // Запрещаем прокрутку
         }
 
-
-
-
-
-
-
-
-
-
         public void AddNewLayer(BitmapSource source)
         {
             ImageDocument.CreateNewImage(source);
             CommitDrawing();
         }
-
-
-
-
-
-
 
         // === КОММИТ И ОЧИСТКА ===
         public void CommitDrawing()
@@ -364,7 +328,7 @@ namespace DrawProject.Controls
             bitmap.Render(_vectorOverlay);
 
             // Применение
-            ImageDocument.ApplyVectorLayer(bitmap, Blend);
+            ImageDocument.ApplyVectorLayer(bitmap, UseBlend);
             _rasterImage.Source = ImageDocument.GetCompositeImage();
             ImageDocument.WasChanged = false;
             bitmap.Freeze();
@@ -377,7 +341,7 @@ namespace DrawProject.Controls
             Dispatcher.BeginInvoke(() =>
                           {
                               _vectorOverlay.Children.Clear();
-                              Blend = true;
+                              UseBlend = true;
                           });
         }
 
@@ -421,18 +385,7 @@ namespace DrawProject.Controls
 
             if (e.NewValue is ImageDocument newDoc)
             {
-                //Сбрасывает Binding в xaml
-                //canvas._rasterImage.Source = newDoc.GetCompositeImage();
-                //canvas._rasterImage.Width = newDoc.Width;
-                //canvas._rasterImage.Height = newDoc.Height;
-
-                //canvas._vectorOverlay.Width = newDoc.Width;
-                //canvas._vectorOverlay.Height = newDoc.Height;
-
-                //canvas.Width = newDoc.Width;
-                //canvas.Height = newDoc.Height;
-
-                newDoc.DocumenWasChanged += canvas.CommitDrawing;
+                newDoc.DocumentWasChanged += canvas.CommitDrawing;
                 canvas._vectorOverlay.Children.Clear();
             }
             else if (e.NewValue == null)
@@ -441,6 +394,8 @@ namespace DrawProject.Controls
                 canvas._vectorOverlay.Children.Clear();
             }
         }
+
+
         public Canvas GetVectorOverlay() => _vectorOverlay;
         public Image GetRasterImage() => _rasterImage;
 

@@ -16,8 +16,8 @@ namespace DrawProject.Models.Instruments
 
         public TextTool()
         {
-            Name = "Текст";
-            ToolTip = "Добавляет текст на холст";
+            Name = "Text";
+            ToolTip = "Add text to image";
             CommitOnMouseUp = false;
             CursorPath = "pack://application:,,,/Resources/Cursors/text-box-edit-outline.png";
         }

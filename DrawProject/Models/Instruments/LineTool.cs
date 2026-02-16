@@ -15,8 +15,8 @@ namespace DrawProject.Instruments
 
         public LineTool()
         {
-            Name = "Линия";
-            ToolTip = "Рисует линию";
+            Name = "Line";
+            ToolTip = "Draw Line";
             CursorPath = "pack://application:,,,/Resources/Cursors/vector-line.png";
         }
 

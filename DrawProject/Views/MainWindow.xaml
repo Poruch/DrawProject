@@ -300,7 +300,7 @@
                     <!--  Левая панель (инструменты)  -->
                     <avalon:LayoutAnchorablePane DockMinWidth="150" DockWidth="2*">
                         <avalon:LayoutAnchorable
-                            Title="Инструменты"
+                            Title="BrushSettings"
                             AutoHideWidth="200"
                             CanClose="False"
                             CanFloat="True"
@@ -318,7 +318,7 @@
                     <!--  Центральная панель (холст)  -->
                     <avalon:LayoutDocumentPane DockMinWidth="300" DockWidth="5*">
                         <avalon:LayoutDocument
-                            Title="Холст"
+                            Title="Image"
                             CanClose="False"
                             CanFloat="False"
                             ContentId="MainCanvas">
@@ -345,7 +345,7 @@
                     <!--  Правая панель (слои)  -->
                     <avalon:LayoutAnchorablePane DockMinWidth="150" DockWidth="2*">
                         <avalon:LayoutAnchorable
-                            Title="Слои"
+                            Title="Layers"
                             AutoHideWidth="200"
                             CanClose="False"
                             CanFloat="True"

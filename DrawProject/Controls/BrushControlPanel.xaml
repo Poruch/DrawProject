@@ -28,14 +28,14 @@
                     <TabItem Header="RGBA">
                         <Border Padding="5">
                             <Viewbox Stretch="Uniform">
-                                <controls:ColorSlider x:Name="ColorSliders" SelectedColor="{Binding BrushColor, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"/>
+                                <controls:ColorSlider x:Name="ColorSliders" SelectedColor="{Binding BrushColor, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}" />
                             </Viewbox>
                         </Border>
                     </TabItem>
                     <TabItem Header="HSL">
                         <Border Padding="5">
                             <Viewbox Stretch="Uniform">
-                                <controls:ColorSlider/>
+                                <controls:ColorSlider />
                             </Viewbox>
                         </Border>
                     </TabItem>
@@ -91,7 +91,7 @@
                 Padding="8,5"
                 Background="#F8F8F8"
                 FontSize="11">
-                <Run Foreground="#666666" Text="Размер: " />
+                <Run Foreground="#666666" Text="Size: " />
                 <Run Text="{Binding CurrentDoc.Width, FallbackValue=0, StringFormat={}{0}×, RelativeSource={RelativeSource AncestorType=UserControl}}" />
                 <Run Text="{Binding CurrentDoc.Height, FallbackValue=0, RelativeSource={RelativeSource AncestorType=UserControl}}" />
                 <Run Foreground="#666666" Text=" px" />

@@ -11,7 +11,7 @@ namespace DrawProject.Models
     {
         // === ДАННЫЕ ИЗОБРАЖЕНИЯ ===
         bool _wasChanged = false;
-        public event Action DocumenWasChanged;
+        public event Action DocumentWasChanged;
 
 
         ObservableCollection<Layer> _layers = new();
@@ -54,8 +54,8 @@ namespace DrawProject.Models
             set
             {
                 _wasChanged = value;
-                if (_wasChanged && DocumenWasChanged != null)
-                    DocumenWasChanged.Invoke();
+                if (_wasChanged && DocumentWasChanged != null)
+                    DocumentWasChanged.Invoke();
             }
 
         }

@@ -45,6 +45,22 @@ namespace DrawProject.Services
                 return "";
             }
         }
+
+        // Вспомогательный метод для загрузки иконок
+        public static ImageSource LoadIconFromResource(string resourceName)
+        {
+            try
+            {
+                var uri = new Uri(resourceName, UriKind.RelativeOrAbsolute);
+                return new BitmapImage(uri);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+
         public static bool SaveBitmapToPng(BitmapSource bitmap, Window parentWindow = null)
         {
             if (bitmap == null)

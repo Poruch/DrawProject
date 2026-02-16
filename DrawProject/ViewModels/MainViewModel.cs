@@ -12,6 +12,7 @@ using DrawProject.Controls;
 using DrawProject.Models;
 using DrawProject.Models.Instruments;
 using DrawProject.Services;
+using static DrawProject.Models.BrushShape;
 
 namespace DrawProject.ViewModels
 {
@@ -131,143 +132,17 @@ namespace DrawProject.ViewModels
             _brush.Size = 5;
             _brush.Opacity = 1.0f;
             _brush.Hardness = 0.5f;
-            _brush.Shape = new SquareBrushShape();
+            _brush.Shape = new CircleBrushShape();
         }
-
-
-        public List<MenuItem> GenerateToolMenuItems()
-        {
-            var menuItems = new List<MenuItem>();
-
-            // Находим все классы-наследники Tool в текущей сборке
-            var toolTypes = Assembly.GetExecutingAssembly()
-                .GetTypes()
-                .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Tool)))
-                .ToList();
-
-            foreach (var toolType in toolTypes)
-            {
-                if (Activator.CreateInstance(toolType) is Tool tool)
-                {
-                    _tools.Add(tool);
-                    var mainItem = new MenuItem { Header = tool.Name };
-                    // Пункт настроек (если есть)
-                    var inspectableProps = tool.GetType()
-                        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                        .Where(p => p.GetCustomAttribute<InspectableAttribute>() != null && p.CanRead && p.CanWrite)
-                        .ToList();
-                    if (inspectableProps.Any())
-                    {
-                        // Пункт для выбора инструмента
-                        var selectItem = new MenuItem
-                        {
-                            Header = $"Выбрать: {tool.Name}",
-                            ToolTip = tool.ToolTip,
-                            Command = new RelayCommand(() => OnToolSelected(tool))
-                        };
-
-                        mainItem.Items.Add(selectItem);
-
-                        var settingsSubmenu = new MenuItem { Header = "⚙ Настройки..." };
-                        settingsSubmenu.Command = new RelayCommand(() => ShowSettingsWindow(tool, inspectableProps));
-                        mainItem.Items.Add(settingsSubmenu);
-                    }
-                    else
-                    {
-                        mainItem.Command = new RelayCommand(() => OnToolSelected(tool));
-                    }
-                    menuItems.Add(mainItem);
-                }
-            }
-
-
-            return menuItems;
-        }
-
-
 
 
         public List<UIElement> GenerateToolRibbonControls()
         {
-            var ribbonControls = new List<UIElement>();
-
-            var toolTypes = Assembly.GetExecutingAssembly()
-                .GetTypes()
-                .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Tool)))
-                .ToList();
-
-            foreach (var toolType in toolTypes)
-            {
-                if (Activator.CreateInstance(toolType) is Tool tool)
-                {
-                    _tools.Add(tool);
-
-                    var icon = LoadIconFromResource(tool.CursorPath);
-
-                    var inspectableProps = tool.GetType()
-                        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                        .Where(p => p.GetCustomAttribute<InspectableAttribute>() != null && p.CanRead && p.CanWrite)
-                        .ToList();
-
-                    if (inspectableProps.Any())
-                    {
-                        var splitButton = new RibbonSplitButton
-                        {
-                            Label = tool.Name,
-                            SmallImageSource = icon,
-                            LargeImageSource = icon,
-                            ToolTip = tool.ToolTip,
-                            Command = new RelayCommand(() => OnToolSelected(tool)),
-                            IsCheckable = false
-                        };
-
-                        var settingsItem = new RibbonMenuItem
-                        {
-                            Header = "Настройки...",
-                            Command = new RelayCommand(() => ShowSettingsWindow(tool, inspectableProps))
-                        };
-                        var settingsIcon = LoadIconFromResource("SettingsIcon.png");
-                        if (settingsIcon != null)
-                        {
-                            settingsItem.ImageSource = settingsIcon;
-                        }
-                        splitButton.Items.Add(settingsItem);
-                        ribbonControls.Add(splitButton);
-                    }
-                    else
-                    {
-                        var button = new RibbonButton
-                        {
-                            Label = tool.Name,
-                            SmallImageSource = icon,
-                            LargeImageSource = icon,
-                            ToolTip = tool.ToolTip,
-                            Command = new RelayCommand(() => OnToolSelected(tool)),
-                            Focusable = true,
-                            IsHitTestVisible = true,
-                        };
-
-                        ribbonControls.Add(button);
-                    }
-                }
-            }
-
-            return ribbonControls;
+            var t = UIGeneratorService.GenerateToolRibbonControls(OnToolSelected, ShowSettingsWindow);
+            _tools = t.Item2;
+            return t.Item1;
         }
 
-        // Вспомогательный метод для загрузки иконок
-        private ImageSource LoadIconFromResource(string resourceName)
-        {
-            try
-            {
-                var uri = new Uri(resourceName, UriKind.RelativeOrAbsolute);
-                return new BitmapImage(uri);
-            }
-            catch
-            {
-                return null;
-            }
-        }
 
         private void ShowSettingsWindow(Tool tool, List<PropertyInfo> properties)
         {

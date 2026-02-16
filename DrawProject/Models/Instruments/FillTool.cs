@@ -20,8 +20,8 @@ namespace DrawProject.Models.Instruments
 
         public FillTool()
         {
-            Name = "Заливка";
-            ToolTip = "Быстрая заливка";
+            Name = "Fill";
+            ToolTip = "Fill area between lines";
             CursorPath = "pack://application:,,,/Resources/Cursors/format-color-fill.png";
         }
 

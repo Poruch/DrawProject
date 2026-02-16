@@ -24,8 +24,8 @@ namespace DrawProject.Instruments
 
         public StarTool()
         {
-            Name = "Звезда";
-            ToolTip = "Строит звезду с настраиваемым количеством лучей";
+            Name = "Start";
+            ToolTip = "Draw star";
             CursorPath = "pack://application:,,,/Resources/Cursors/star.png";
             PointsCount = 5;
             InnerRadiusRatio = 0.5;

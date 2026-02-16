@@ -5,15 +5,13 @@
     xmlns:local="clr-namespace:DrawProject"
     StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
-        <!--  ЕДИНСТВЕННЫЙ корневой словарь  -->
         <ResourceDictionary>
-            <!--  1. Сначала подключаем внешние темы  -->
             <ResourceDictionary.MergedDictionaries>
-                <!--  ПРАВИЛЬНЫЙ путь для современных версий Fluent.Ribbon  -->
                 <ResourceDictionary Source="pack://application:,,,/Fluent;Component/Themes/Generic.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!--  2. Потом добавляем СВОИ ресурсы  -->
+
+
             <ImageBrush
                 x:Key="CheckerboardBrush"
                 ImageSource="pack://application:,,,/Resources/checkerboard.png"

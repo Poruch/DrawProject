@@ -17,8 +17,8 @@ namespace DrawProject.Instruments
         public bool IsFill { get; set; } = false;
         public EllipseTool()
         {
-            Name = "Эллипс";
-            ToolTip = "Строит эллипс";
+            Name = "Ellipse";
+            ToolTip = "Draw ellipse";
             CursorPath = "pack://application:,,,/Resources/Cursors/ellipse-outline.png";
         }
 

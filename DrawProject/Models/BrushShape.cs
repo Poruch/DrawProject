@@ -17,33 +17,16 @@ namespace DrawProject.Models
             set
             {
                 _hardness = Math.Clamp(value, 0f, 1f);
-                ClearMaskCache();
             }
         }
 
         protected float _hardness = 0.5f;
 
-        // === КЭШ МАСОК ===
-        private Dictionary<(int, float), float[,]> _maskCache = new();
-        private const int MAX_MASK_CACHE = 10;
 
         // === КЭШ ПРЕВЬЮ ===
         private Dictionary<(int, Color, float), UIElement> _previewCache = new();
-        private const int MAX_PREVIEW_CACHE = 20;
 
         // === ОСНОВНЫЕ МЕТОДЫ ===
-        public float[,] GetMask(int size)
-        {
-            var key = (size, Hardness);
-
-            if (_maskCache.TryGetValue(key, out var cached))
-                return cached;
-
-            var mask = CalculateMask(size);
-            CacheMask(key, mask);
-            return mask;
-        }
-
         public UIElement GetPreviewElement(Point center, int size, Color color, float opacity)
         {
             var key = (size, color, opacity);
@@ -57,26 +40,18 @@ namespace DrawProject.Models
         }
 
         // === АБСТРАКТНЫЕ МЕТОДЫ ===
-        protected abstract float[,] CalculateMask(int size);
         protected abstract UIElement CreatePreviewTemplate(int size, Color color, float opacity);
         public abstract bool IsPointInShape(Point point, Point center, int size);
 
-        // === КЭШИРОВАНИЕ ===
-        private void CacheMask((int, float) key, float[,] mask)
-        {
-            if (_maskCache.Count >= MAX_MASK_CACHE)
-                _maskCache.Clear();
-
-            _maskCache[key] = mask;
-        }
 
         private void CachePreview((int, Color, float) key, UIElement element)
         {
-            if (_previewCache.Count >= MAX_PREVIEW_CACHE)
+            if (_previewCache.Count >= 20)
                 _previewCache.Clear();
 
             _previewCache[key] = element;
         }
+
 
         private UIElement CloneAndPosition(UIElement template, Point center, int size)
         {
@@ -120,105 +95,54 @@ namespace DrawProject.Models
             }
         }
 
-        public void ClearMaskCache() => _maskCache.Clear();
-        public void ClearPreviewCache() => _previewCache.Clear();
-        public void ClearAllCache()
+
+        // === РЕАЛИЗАЦИИ ===
+
+        public class CircleBrushShape : BrushShape
         {
-            ClearMaskCache();
-            ClearPreviewCache();
-        }
-    }
-
-    // === РЕАЛИЗАЦИИ ===
-
-    public class CircleBrushShape : BrushShape
-    {
-        public override string Name => "Circle";
-
-        protected override float[,] CalculateMask(int size)
-        {
-            var mask = new float[size, size];
-            int radius = size / 2;
-            float hardRadius = radius * Hardness;
-
-            for (int y = 0; y < size; y++)
+            public override string Name => "Circle";
+            protected override UIElement CreatePreviewTemplate(int size, Color color, float opacity)
             {
-                for (int x = 0; x < size; x++)
+                return new Ellipse
                 {
-                    float dx = x - radius;
-                    float dy = y - radius;
-                    float distance = (float)Math.Sqrt(dx * dx + dy * dy);
-
-                    if (distance <= hardRadius)
-                        mask[x, y] = 1.0f;
-                    else if (distance <= radius)
-                        mask[x, y] = 1.0f - (distance - hardRadius) / (radius - hardRadius);
-                }
+                    Width = size,
+                    Height = size,
+                    Fill = new SolidColorBrush(color),
+                    Opacity = opacity * 0.7f
+                };
             }
 
-            return mask;
-        }
-
-        protected override UIElement CreatePreviewTemplate(int size, Color color, float opacity)
-        {
-            return new Ellipse
+            public override bool IsPointInShape(Point point, Point center, int size)
             {
-                Width = size,
-                Height = size,
-                Fill = new SolidColorBrush(color),
-                Opacity = opacity * 0.7f
-            };
+                float dx = (float)(point.X - center.X);
+                float dy = (float)(point.Y - center.Y);
+                return Math.Sqrt(dx * dx + dy * dy) <= size / 2;
+            }
         }
 
-        public override bool IsPointInShape(Point point, Point center, int size)
+        public class SquareBrushShape : BrushShape
         {
-            float dx = (float)(point.X - center.X);
-            float dy = (float)(point.Y - center.Y);
-            return Math.Sqrt(dx * dx + dy * dy) <= size / 2;
-        }
-    }
+            public override string Name => "Square";
 
-    public class SquareBrushShape : BrushShape
-    {
-        public override string Name => "Square";
 
-        protected override float[,] CalculateMask(int size)
-        {
-            var mask = new float[size, size];
-            int hardBorder = Math.Max(1, (int)(size * (1 - Hardness) / 2));
-
-            for (int y = 0; y < size; y++)
+            protected override UIElement CreatePreviewTemplate(int size, Color color, float opacity)
             {
-                for (int x = 0; x < size; x++)
+                return new Rectangle
                 {
-                    float dist = Math.Min(
-                        Math.Min(x, size - 1 - x),
-                        Math.Min(y, size - 1 - y));
-
-                    mask[x, y] = Math.Min(1.0f, dist / hardBorder);
-                }
+                    Width = size,
+                    Height = size,
+                    Fill = new SolidColorBrush(color),
+                    Opacity = opacity * 0.7f,
+                    Stroke = new SolidColorBrush(color),
+                    StrokeThickness = 1
+                };
             }
 
-            return mask;
-        }
-
-        protected override UIElement CreatePreviewTemplate(int size, Color color, float opacity)
-        {
-            return new Rectangle
+            public override bool IsPointInShape(Point point, Point center, int size)
             {
-                Width = size,
-                Height = size,
-                Fill = new SolidColorBrush(color),
-                Opacity = opacity * 0.7f,
-                Stroke = new SolidColorBrush(color),
-                StrokeThickness = 1
-            };
-        }
-
-        public override bool IsPointInShape(Point point, Point center, int size)
-        {
-            return Math.Abs(point.X - center.X) <= size / 2 &&
-                   Math.Abs(point.Y - center.Y) <= size / 2;
+                return Math.Abs(point.X - center.X) <= size / 2 &&
+                       Math.Abs(point.Y - center.Y) <= size / 2;
+            }
         }
     }
 }

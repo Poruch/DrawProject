@@ -10,8 +10,8 @@ public class SimplePipetteTool : Tool
 {
     public SimplePipetteTool()
     {
-        Name = "Пипетка";
-        ToolTip = "Подбирает цвет";
+        Name = "Eyedropper";
+        ToolTip = "Pick color";
         CursorPath = "pack://application:,,,/Resources/Cursors/eyedropper.png";
     }
 

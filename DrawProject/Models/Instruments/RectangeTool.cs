@@ -19,8 +19,8 @@ namespace DrawProject.Instruments
         public bool IsFill { get; set; } = false;
         public RectangleTool()
         {
-            Name = "Прямоугольник";
-            ToolTip = "Строит прямоугольник";
+            Name = "Rectangle";
+            ToolTip = "Draw rectangle";
             CursorPath = "pack://application:,,,/Resources/Cursors/rectangle-outline.png";
         }
         public override void OnMouseDown(InstrumentContext context)

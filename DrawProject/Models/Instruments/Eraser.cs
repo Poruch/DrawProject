@@ -11,8 +11,8 @@ class Eraser : Tool
 {
     public Eraser()
     {
-        Name = "Ластик";
-        ToolTip = "Стирает пиксели";
+        Name = "Eraser";
+        ToolTip = "Set pixels max alfa channel";
         CursorPath = "pack://application:,,,/Resources/Cursors/eraser.png";
     }
     Brush Brush { get; set; }
@@ -23,7 +23,7 @@ class Eraser : Tool
     {
         Brush = context.Brush;
         VectorOverlay = context.VectorOverlay;
-        context.Canvas.Blend = false;
+        context.Canvas.UseBlend = false;
     }
 
 
