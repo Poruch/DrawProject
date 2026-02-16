@@ -70,13 +70,11 @@ namespace DrawProject.Models
         }
         public bool IsUnSaved { get => isUnSaved; set => isUnSaved = value; }
 
-        // Предвычисленные значения
         private readonly int _stride;
         private readonly int _bufferSize;
 
-        // КЭШИРОВАННЫЕ БУФЕРЫ (создаются один раз!)
         private readonly byte[] _vectorBuffer;
-        private readonly byte[] _rasterBuffer; // ← Добавляем буфер для raster
+        private readonly byte[] _rasterBuffer;
 
         // === КОНСТРУКТОР ===
         public ImageDocument(int width, int height)
@@ -86,9 +84,8 @@ namespace DrawProject.Models
             _stride = width * 4;
             _bufferSize = _stride * height;
 
-            // Создаем буферы ОДИН РАЗ в конструкторе
             _vectorBuffer = new byte[_bufferSize];
-            _rasterBuffer = new byte[_bufferSize]; // ← Кэшируем raster буфер
+            _rasterBuffer = new byte[_bufferSize];
 
             AddNewLayer();
             WasChanged = true;
@@ -103,10 +100,8 @@ namespace DrawProject.Models
         {
             AddNewLayer();
             WriteableBitmap Bitmap = _layers[SelectedLayerIndex].Source;
-            // Если размеры Bitmap не совпадают с источником, может понадобиться масштабирование
             if (Bitmap.PixelWidth != source.PixelWidth || Bitmap.PixelHeight != source.PixelHeight)
             {
-                // Масштабируем источник под размер Bitmap
                 var scaledSource = new TransformedBitmap(
                     source,
                     new ScaleTransform(
@@ -115,7 +110,6 @@ namespace DrawProject.Models
                     )
                 );
 
-                // Копируем пиксели из масштабированного источника
                 Bitmap.WritePixels(new Int32Rect(0, 0, Bitmap.PixelWidth, Bitmap.PixelHeight),
                     GetPixelsFromBitmapSource(scaledSource)
                     ,
@@ -125,7 +119,6 @@ namespace DrawProject.Models
             }
             else
             {
-                // Копируем пиксели напрямую
                 Bitmap.WritePixels(
                     new Int32Rect(0, 0, source.PixelWidth, source.PixelHeight),
                     GetPixelsFromBitmapSource(source),
@@ -138,7 +131,6 @@ namespace DrawProject.Models
         public void ClearActiveLayer()
         {
             if (SelectedLayerIndex == -1) return;
-            // Используем WritePixels для быстрой очистки
             var clearPixels = new byte[_bufferSize];
 
             _layers[SelectedLayerIndex].Source.WritePixels(new Int32Rect(0, 0, Width, Height),
@@ -180,11 +172,9 @@ namespace DrawProject.Models
             if (_layers == null || _layers.Count == 0)
                 return null;
 
-            // Проверяем размер первого слоя (все слои одинакового размера)
             int width = _layers[0].Source.PixelWidth;
             int height = _layers[0].Source.PixelHeight;
 
-            // Создаем пустой WriteableBitmap для результата
             WriteableBitmap result = new WriteableBitmap(
                 width,
                 height,
@@ -193,21 +183,17 @@ namespace DrawProject.Models
                 null
             );
 
-            int stride = width * 4; // 4 байта на пиксель для Pbgra32
+            int stride = width * 4;
             byte[] resultPixels = new byte[height * stride];
 
-            // Накладываем все слои (от нижнего к верхнему)
             foreach (var layer in _layers)
             {
-                // Получаем пиксели слоя
                 byte[] layerPixels = new byte[height * stride];
                 layer.Source.CopyPixels(layerPixels, stride, 0);
 
-                // Накладываем слой
                 BlendPixels(resultPixels, layerPixels);
             }
 
-            // Записываем результат
             result.WritePixels(
                 new Int32Rect(0, 0, width, height),
                 resultPixels,
@@ -223,11 +209,9 @@ namespace DrawProject.Models
         {
             for (int i = 0; i < result.Length; i += 4)
             {
-                // Получаем альфа-канал слоя (от 0 до 1)
                 float alpha = layer[i + 3] / 255f;
 
-                // Накладываем каждый цветовой канал
-                for (int channel = 0; channel < 3; channel++) // B, G, R
+                for (int channel = 0; channel < 3; channel++)
                 {
                     result[i + channel] = (byte)(
                         (layer[i + channel] * alpha) +
@@ -235,31 +219,26 @@ namespace DrawProject.Models
                     );
                 }
 
-                // Альфа-канал результата (максимальное значение)
                 result[i + 3] = Math.Max(result[i + 3], layer[i + 3]);
             }
             isUnSaved = true;
         }
 
         // === ПЕРЕНОС ВЕКТОРА В РАСТР ===
-        public void ApplyVectorLayer(BitmapSource vectorLayer, bool isEraser = false)
+        public void ApplyVectorLayer(BitmapSource vectorLayer, byte alpha = 255, bool isEraser = false)
         {
             if (vectorLayer == null || SelectedLayerIndex == -1) return;
-
-
-            // Копируем векторный слой в кэшированный буфер
             vectorLayer.CopyPixels(_vectorBuffer, _stride, 0);
 
-            // Копируем текущий Bitmap в кэшированный буфер
             _layers[SelectedLayerIndex].Source.CopyPixels(_rasterBuffer, _stride, 0);
 
-            if (!isEraser)
+            if (isEraser)
             {
-                ApplyEraser(_rasterBuffer, _vectorBuffer);
+                ApplyEraser(_rasterBuffer, _vectorBuffer, alpha);
             }
             else
             {
-                ApplyBrush(_rasterBuffer, _vectorBuffer);
+                ApplyBrush(_rasterBuffer, _vectorBuffer, alpha);
             }
 
             // Записываем обратно
@@ -268,91 +247,56 @@ namespace DrawProject.Models
             isUnSaved = true;
         }
 
-        private void ApplyBrush(byte[] rasterPixels, byte[] vectorPixels)
+        private void ApplyBrush(byte[] rasterPixels, byte[] vectorPixels, byte alpha = 255)
         {
             for (int i = 0; i < rasterPixels.Length; i += 4)
             {
-                byte srcB = vectorPixels[i];
-                byte srcG = vectorPixels[i + 1];
-                byte srcR = vectorPixels[i + 2];
-                byte srcA = vectorPixels[i + 3];
+                byte vectorAlpha = vectorPixels[i + 3] == 0 ? vectorPixels[i + 3] : alpha;
+                if (vectorAlpha == 0) continue;
 
-                if (srcA == 0) continue; // Нечего накладывать
+                float srcAlpha = vectorAlpha / 255f;
 
-                byte dstB = rasterPixels[i];
-                byte dstG = rasterPixels[i + 1];
-                byte dstR = rasterPixels[i + 2];
-                byte dstA = rasterPixels[i + 3];
+                float dstR = rasterPixels[i] / 255f;
+                float dstG = rasterPixels[i + 1] / 255f;
+                float dstB = rasterPixels[i + 2] / 255f;
+                float dstA = rasterPixels[i + 3] / 255f;
 
-                if (srcA == 255 && dstA == 255)
-                {
-                    // Быстрый путь для полностью непрозрачных пикселей
-                    rasterPixels[i] = srcB;
-                    rasterPixels[i + 1] = srcG;
-                    rasterPixels[i + 2] = srcR;
-                    // Альфа остаётся 255
-                }
-                else
-                {
-                    // === Мягкий блендинг "source over" ===
-                    // Используем целочисленную арифметику для скорости и плавности
+                float srcR = vectorPixels[i] / 255f;
+                float srcG = vectorPixels[i + 1] / 255f;
+                float srcB = vectorPixels[i + 2] / 255f;
 
-                    // Нормализуем альфы в диапазон 0..256
-                    int srcAlpha = srcA + 1;
-                    int dstAlpha = dstA + 1;
-                    int invSrcAlpha = 256 - srcAlpha;
+                float outR = srcR * srcAlpha + dstR * (1f - srcAlpha);
+                float outG = srcG * srcAlpha + dstG * (1f - srcAlpha);
+                float outB = srcB * srcAlpha + dstB * (1f - srcAlpha);
 
-                    // Результирующая альфа: outA = srcA + dstA * (1 - srcA)
-                    int outAlpha = srcAlpha + ((dstAlpha * invSrcAlpha) >> 8);
-                    if (outAlpha > 256) outAlpha = 256;
+                float outA = dstA + srcAlpha * (1f - dstA);
 
-                    // Смешиваем цвета с плавным переходом
-                    // Формула: outC = (srcC * srcA + dstC * dstA * (1 - srcA)) / outA
-                    int b = (srcB * srcAlpha + dstB * dstAlpha * invSrcAlpha / 256);
-                    int g = (srcG * srcAlpha + dstG * dstAlpha * invSrcAlpha / 256);
-                    int r = (srcR * srcAlpha + dstR * dstAlpha * invSrcAlpha / 256);
-
-                    // Нормализуем по результирующей альфе (только если не полностью непрозрачно)
-                    if (outAlpha < 256)
-                    {
-                        b = (b * 255) / outAlpha;
-                        g = (g * 255) / outAlpha;
-                        r = (r * 255) / outAlpha;
-                    }
-
-                    // Ограничиваем диапазон 0..255
-                    rasterPixels[i] = (byte)(b > 255 ? 255 : (b < 0 ? 0 : b));
-                    rasterPixels[i + 1] = (byte)(g > 255 ? 255 : (g < 0 ? 0 : g));
-                    rasterPixels[i + 2] = (byte)(r > 255 ? 255 : (r < 0 ? 0 : r));
-                    rasterPixels[i + 3] = (byte)(outAlpha - 1); // обратно в 0..255
-                }
+                rasterPixels[i] = (byte)(outR * 255);
+                rasterPixels[i + 1] = (byte)(outG * 255);
+                rasterPixels[i + 2] = (byte)(outB * 255);
+                rasterPixels[i + 3] = (byte)(outA * 255);
             }
-            isUnSaved = true;
         }
 
-        private void ApplyEraser(byte[] rasterPixels, byte[] vectorPixels)
+        private void ApplyEraser(byte[] rasterPixels, byte[] vectorPixels, byte alpha = 255)
         {
-            // Ластик: делаем пиксели прозрачными там, где векторный слой непрозрачен
             for (int i = 0; i < rasterPixels.Length; i += 4)
             {
-                // Порог 10 для игнорирования шума/антиалиасинга
-                if (vectorPixels[i + 3] > 10)
+                byte eraserAlpha = vectorPixels[i + 3] == 0 ? vectorPixels[i + 3] : alpha;
+                if (eraserAlpha == 0) continue;
+
+                float strength = eraserAlpha / 255f;
+                float currentAlpha = rasterPixels[i + 3] / 255f;
+                float newAlpha = currentAlpha * (1 - strength);
+
+                rasterPixels[i + 3] = (byte)(newAlpha * 255);
+
+                // Если пиксель стал полностью прозрачным – обнулим цвет (необязательно)
+                if (newAlpha == 0)
                 {
-                    // Корректное "стирание" с учётом альфы ластика
-                    byte eraserAlpha = vectorPixels[i + 3];
-                    byte currentAlpha = rasterPixels[i + 3];
-
-                    // Уменьшаем альфу пропорционально силе ластика
-                    int newAlpha = currentAlpha - (currentAlpha * eraserAlpha / 255);
-                    rasterPixels[i + 3] = (byte)(newAlpha < 0 ? 0 : newAlpha);
-
-                    // Опционально: при полном стирании обнуляем цвета
-                    if (newAlpha == 0)
-                    {
-                        rasterPixels[i] = 0;
-                        rasterPixels[i + 1] = 0;
-                        rasterPixels[i + 2] = 0;
-                    }
+                    rasterPixels[i] = 0;
+                    rasterPixels[i + 1] = 0;
+                    rasterPixels[i + 2] = 0;
                 }
             }
             isUnSaved = true;
@@ -388,7 +332,6 @@ namespace DrawProject.Models
             {
                 if (disposing)
                 {
-                    // Освобождаем управляемые ресурсы
                     ClearDocument();
                 }
                 _disposed = true;

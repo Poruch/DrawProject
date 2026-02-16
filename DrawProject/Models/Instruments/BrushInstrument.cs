@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace DrawProject.Models.Instruments
 {
@@ -38,7 +39,8 @@ namespace DrawProject.Models.Instruments
         public override void OnMouseMove(InstrumentContext context)
         {
             var preview = Brush.Shape.GetPreviewElement(context.Position,
-                (int)(context.Brush.Size * context.Pressure), Brush.Color, Brush.Opacity);
+                (int)(context.Brush.Size * context.Pressure), Color.FromArgb(255, Brush.Color.R, Brush.Color.G, Brush.Color.B), Brush.Opacity);
+            RenderOptions.SetEdgeMode(preview, EdgeMode.Aliased);
             VectorOverlay.Children.Add(preview);
         }
 

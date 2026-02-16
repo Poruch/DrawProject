@@ -143,7 +143,7 @@ namespace DrawProject.Services
             }
         }
 
-        public static BitmapSource OpenFileImage()
+        public static (BitmapSource, string) OpenFileImage()
         {
             var openFileDialog = new OpenFileDialog()
             {
@@ -158,9 +158,9 @@ namespace DrawProject.Services
 
             if (result == null || !result.Value)
             {
-                return null;
+                return (null, null);
             }
-            return new BitmapImage(new Uri(openFileDialog.FileName));
+            return (new BitmapImage(new Uri(openFileDialog.FileName)), openFileDialog.FileName);
         }
 
 

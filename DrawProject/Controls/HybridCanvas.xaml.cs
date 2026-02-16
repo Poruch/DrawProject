@@ -1,5 +1,6 @@
 ﻿using DrawProject.Models;
 using DrawProject.Models.Instruments;
+using DrawProject.Services;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -60,22 +61,6 @@ namespace DrawProject.Controls
         private bool _isDrawing = false;
         private bool isInitialize = false;
         private int BrushSize = 1;
-        // === МНОГОПОТОЧНЫЕ ОЧЕРЕДИ ===
-        private ConcurrentQueue<MousePoint> _inputQueue;  // Для ввода мыши
-        private ConcurrentQueue<ProcessedPoint> _outputQueue; // Для рисования в UI
-        private Task _processingTask;
-        private CancellationTokenSource _cts;
-        private DispatcherTimer _uiTimer;
-
-        private MousePoint? lastPoint = null;
-
-
-        // Структуры данных
-        private struct MousePoint
-        {
-            public Point Position;
-            public DateTime Timestamp;
-        }
 
         private struct ProcessedPoint
         {
@@ -83,12 +68,12 @@ namespace DrawProject.Controls
             public bool IsInterpolated;
         }
 
+
         // === КОНСТРУКТОР ===
         public HybridCanvas()
         {
             InitializeComponent();
             InitializeLayers();
-            InitializeThreadingSystem();
         }
 
         private void InitializeLayers()
@@ -105,134 +90,32 @@ namespace DrawProject.Controls
 
             this.Loaded += HybridCanvas_Loaded;
             this.Unloaded += HybridCanvas_Unloaded;
+
+
         }
+
 
         private void HybridCanvas_Loaded(object sender, RoutedEventArgs e)
         {
-            // Если потоки ещё не запущены или были отменены – запускаем заново
-            if (_cts == null || _cts.IsCancellationRequested)
-            {
-                InitializeThreadingSystem();
-            }
+
         }
         private void HybridCanvas_Unloaded(object sender, RoutedEventArgs e)
         {
-            CleanupThreading();
-        }
-        private void InitializeThreadingSystem()
-        {
-            if (_cts != null && !_cts.IsCancellationRequested)
-                return;
 
-            _inputQueue = new ConcurrentQueue<MousePoint>();
-            _outputQueue = new ConcurrentQueue<ProcessedPoint>();
-            _cts = new CancellationTokenSource();
-            _processingTask = Task.Run(() => ProcessPointsBackground(_cts.Token));
-
-            _uiTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
-            _uiTimer.Tick += ProcessPointsInUI;
-            _uiTimer.Start();
         }
+
 
         // === ВВОД МЫШИ (UI поток) ===
         private void OnMouseMove(object sender, MouseEventArgs e)
         {
             if (!_isDrawing) return;
 
-            _inputQueue.Enqueue(new MousePoint
-            {
-                Position = e.GetPosition(this),
-                Timestamp = DateTime.Now
-            });
-        }
-
-        // === ФОНОВАЯ ОБРАБОТКА (отдельный поток!) ===
-        private async Task ProcessPointsBackground(CancellationToken ct)
-        {
-
-            while (!ct.IsCancellationRequested)
-            {
-                while (_inputQueue.TryDequeue(out var currentPoint))
-                {
-                    if (lastPoint.HasValue)
-                    {
-                        // Интерполируем между точками в фоновом потоке!
-                        InterpolateBetweenPoints(lastPoint.Value, currentPoint);
-                    }
-                    //await Task.Delay(1, ct);
-                    // Добавляем оригинальную точку
-                    _outputQueue.Enqueue(new ProcessedPoint
-                    {
-                        Position = currentPoint.Position,
-                        IsInterpolated = false
-                    });
-                    lastPoint = currentPoint;
-                }
-            }
-        }
-
-        private void InterpolateBetweenPoints(MousePoint from, MousePoint to)
-        {
-            // ВСЕ ВЫЧИСЛЕНИЯ в фоновом потоке!
-            double distance = Math.Sqrt(
-            Math.Pow(to.Position.X - from.Position.X, 2) +
-            Math.Pow(to.Position.Y - from.Position.Y, 2));
-
-            double timeDiff = (to.Timestamp - from.Timestamp).TotalMilliseconds;
-            double speed = distance / Math.Max(1, timeDiff);
-
-            // Определяем нужно ли интерполировать
-            //if (distance > 2.0 && speed > 2.0)
-            {
-                int steps = CalculateSteps(distance, speed, BrushSize);
-
-                for (int i = 1; i < steps; i++)
-                {
-                    double t = i / (double)steps;
-                    Point interpolated = new Point(
-                    from.Position.X + (to.Position.X - from.Position.X) * t,
-                    from.Position.Y + (to.Position.Y - from.Position.Y) * t);
-
-                    _outputQueue.Enqueue(new ProcessedPoint
-                    {
-                        Position = interpolated,
-                        IsInterpolated = true
-                    });
-                }
-            }
-        }
-
-        private int CalculateSteps(double distance, double speed, int size)
-        {
-            int steps = (int)(distance / Math.Max(1, size));
-            steps = (int)(steps * 1.5);
-
-            return steps;
+            var context = new InstrumentContext(this, e, default);
+            Tool?.OnMouseMove(context);
         }
 
 
 
-
-
-        // === ОБРАБОТКА В UI ПОТОКЕ ===
-        private void ProcessPointsInUI(object sender, EventArgs e)
-        {
-            if (!_isDrawing || Tool == null) return;
-
-            int pointsProcessed = 0;
-            const int maxPointsPerFrame = 40;
-
-            while (pointsProcessed < maxPointsPerFrame &&
-              _outputQueue.TryDequeue(out var point))
-            {
-                // ВСЕ UI операции здесь!
-                var context = new InstrumentContext(this, point.Position, default);
-                Tool.OnMouseMove(context);
-
-                pointsProcessed++;
-            }
-
-        }
 
 
         // === УПРАВЛЕНИЕ СОСТОЯНИЕМ ===
@@ -242,17 +125,10 @@ namespace DrawProject.Controls
 
             _isDrawing = true;
 
-            ClearQueues();
-
             var point = e.GetPosition(this);
             var context = new InstrumentContext(this, e, default);
             Tool?.OnMouseDown(context);
 
-            _inputQueue.Enqueue(new MousePoint
-            {
-                Position = point,
-                Timestamp = DateTime.Now
-            });
             BrushSize = Brush.Size;
             CaptureMouse();
         }
@@ -264,35 +140,17 @@ namespace DrawProject.Controls
             _isDrawing = false;
             ReleaseMouseCapture();
 
-            // Обрабатываем все оставшиеся точки
-            ProcessAllRemainingPoints();
-
             var context = new InstrumentContext(this, e, default);
             Tool?.OnMouseUp(context);
 
-            lastPoint = null;
+            //lastPoint = null;
             if (Tool.CommitOnMouseUp)
                 CommitDrawing();
         }
 
-        private void ProcessAllRemainingPoints()
-        {
-            // Ждем пока фоновый поток обработает все
-            int attempts = 0;
-            while ((_inputQueue.Count > 0 || _outputQueue.Count > 0) && attempts < 100)
-            {
-                //Thread.Sleep(1);
-                ProcessPointsInUI(null, EventArgs.Empty);
-                attempts++;
-            }
-        }
 
-        private void ClearQueues()
-        {
-            // Очищаем очереди
-            while (_inputQueue.TryDequeue(out _)) { }
-            while (_outputQueue.TryDequeue(out _)) { }
-        }
+
+
 
         private void OnCanvasMouseWheel(object sender, MouseWheelEventArgs e)
         {
@@ -308,7 +166,6 @@ namespace DrawProject.Controls
         // === КОММИТ И ОЧИСТКА ===
         public void CommitDrawing()
         {
-            ClearQueues();
             if (_vectorOverlay.Children.Count == 0 && !ImageDocument.WasChanged)
             {
                 ClearOverlay();
@@ -328,7 +185,7 @@ namespace DrawProject.Controls
             bitmap.Render(_vectorOverlay);
 
             // Применение
-            ImageDocument.ApplyVectorLayer(bitmap, UseBlend);
+            ImageDocument.ApplyVectorLayer(bitmap, Brush.Color.A, !UseBlend);
             _rasterImage.Source = ImageDocument.GetCompositeImage();
             ImageDocument.WasChanged = false;
             bitmap.Freeze();
@@ -345,38 +202,7 @@ namespace DrawProject.Controls
                           });
         }
 
-        private void CleanupThreading()
-        {
-            if (_cts != null)
-            {
-                _cts.Cancel();
-                try
-                {
-                    _processingTask?.Wait(1000); // ждём завершения фоновой задачи
-                }
-                catch (AggregateException ex)
-                {
-                    // Игнорируем ожидаемое исключение отмены
-                    if (ex.InnerException is OperationCanceledException)
-                        Debug.WriteLine("Background task cancelled.");
-                    else
-                        Debug.WriteLine($"Error stopping background task: {ex.Message}");
-                }
-                finally
-                {
-                    _cts.Dispose();
-                    _cts = null;
-                    _processingTask = null;
-                }
-            }
 
-            if (_uiTimer != null)
-            {
-                _uiTimer.Stop();
-                _uiTimer.Tick -= ProcessPointsInUI;
-                _uiTimer = null;
-            }
-        }
 
         // === ОСТАЛЬНЫЕ МЕТОДЫ ===
         private static void OnImageDocumentChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -401,7 +227,6 @@ namespace DrawProject.Controls
 
         public void ClearCanvas()
         {
-            ClearQueues();
             _vectorOverlay.Children.Clear();
             ImageDocument?.ClearActiveLayer();
             _rasterImage.Source = ImageDocument?.GetCompositeImage();

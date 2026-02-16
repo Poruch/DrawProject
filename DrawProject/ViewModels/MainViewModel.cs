@@ -206,12 +206,15 @@ namespace DrawProject.ViewModels
         private void OpenImage()
         {
             var source = FileService.OpenFileImage();
-            if (source == null)
+            if (source.Item1 == null)
             {
                 return;
             }
-            CreateDocument((int)source.Width, (int)source.Height);
-            CurrentDoc.CreateNewImage(source);
+
+
+            currentPath = source.Item2;
+            CreateDocument((int)source.Item1.Width, (int)source.Item1.Height);
+            CurrentDoc.CreateNewImage(source.Item1);
         }
 
         private void ResizeImage()

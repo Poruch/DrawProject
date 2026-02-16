@@ -108,7 +108,7 @@ namespace DrawProject.Models
                     Width = size,
                     Height = size,
                     Fill = new SolidColorBrush(color),
-                    Opacity = opacity * 0.7f
+                    //Opacity = opacity * 0.7f
                 };
             }
 
