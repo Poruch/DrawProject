@@ -32,13 +32,13 @@
                             </Viewbox>
                         </Border>
                     </TabItem>
-                    <TabItem Header="HSL">
-                        <Border Padding="5">
-                            <Viewbox Stretch="Uniform">
-                                <controls:ColorSlider />
-                            </Viewbox>
-                        </Border>
-                    </TabItem>
+                    <!--<TabItem Header="HSL">
+                    <Border Padding="5">
+                    <Viewbox Stretch="Uniform">
+                    <controls:ColorSlider />
+                    </Viewbox>
+                    </Border>
+                    </TabItem>-->
                 </TabControl>
             </Border>
 

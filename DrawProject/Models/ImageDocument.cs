@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-
+using DrawProject.Services.Plugins;
 namespace DrawProject.Models
 {
     public class ImageDocument : ObservableObject, IDisposable
@@ -291,7 +291,6 @@ namespace DrawProject.Models
 
                 rasterPixels[i + 3] = (byte)(newAlpha * 255);
 
-                // Если пиксель стал полностью прозрачным – обнулим цвет (необязательно)
                 if (newAlpha == 0)
                 {
                     rasterPixels[i] = 0;
@@ -300,6 +299,41 @@ namespace DrawProject.Models
                 }
             }
             isUnSaved = true;
+        }
+
+
+        public async Task ApplyFilterAsync(Filter filter, IProgress<double> progress = null)
+        {
+
+            if (SelectedLayer == null) return;
+
+            //Захватываем нужные данные ДО фоновой работы
+            Layer targetLayer = SelectedLayer;
+            int targetWidth = Width;
+            int targetHeight = Height;
+            int stride = targetWidth * 4;
+            byte[] originalPixels = new byte[_bufferSize];
+            targetLayer.Source.CopyPixels(originalPixels, stride, 0);
+
+
+
+            byte[] resultPixels = await Task.Run(() => filter.Apply(originalPixels, stride, targetWidth, targetHeight, progress));
+
+
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                if (targetLayer == null ||
+                    Width != targetWidth ||
+                    Height != targetHeight)
+                {
+                    return;
+                }
+
+                targetLayer.UpdatePixels(new Int32Rect(0, 0, targetWidth, targetHeight),
+                                         resultPixels, stride);
+                WasChanged = true;
+                IsUnSaved = true;
+            });
         }
 
 

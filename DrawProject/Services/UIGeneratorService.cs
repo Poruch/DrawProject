@@ -10,22 +10,23 @@ using System.Windows.Media.Imaging;
 using DrawProject.Attributes;
 using DrawProject.Controls;
 using DrawProject.Models;
-using DrawProject.Models.Instruments;
 using DrawProject.Services;
+using DrawProject.Services.Plugins;
 
 namespace DrawProject.Services
 {
     internal static class UIGeneratorService
     {
-        public static (List<MenuItem>, List<Tool>) GenerateToolMenuItems(Action<Tool> function1, Action<Tool, List<PropertyInfo>> function2)
+        public static (List<MenuItem>, List<Tool>) GenerateToolMenuItems(Action<Tool> function1, Action<Tool, List<PropertyInfo>> function2, List<Type> toolTypes = null)
         {
             var menuItems = new List<MenuItem>();
             var tools = new List<Tool>();
-            // Находим все классы-наследники Tool в текущей сборке
-            var toolTypes = Assembly.GetExecutingAssembly()
-                .GetTypes()
-                .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Tool)))
-                .ToList();
+
+            if (toolTypes == null)
+                toolTypes = Assembly.GetExecutingAssembly()
+                    .GetTypes()
+                    .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Tool)))
+                    .ToList();
 
             foreach (var toolType in toolTypes)
             {
@@ -64,16 +65,21 @@ namespace DrawProject.Services
 
             return (menuItems, tools);
         }
-        public static (List<UIElement>, List<Tool>) GenerateToolRibbonControls(Action<Tool> function1, Action<Tool, List<PropertyInfo>> function2)
+
+
+
+
+        public static (List<UIElement>, List<Tool>) GenerateToolRibbonControls(Action<Tool> function1, Action<Tool, List<PropertyInfo>> function2, List<Type> toolTypes = null)
         {
             var ribbonControls = new List<UIElement>();
             var tools = new List<Tool>();
 
 
-            var toolTypes = Assembly.GetExecutingAssembly()
-                .GetTypes()
-                .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Tool)))
-                .ToList();
+            if (toolTypes == null)
+                toolTypes = Assembly.GetExecutingAssembly()
+                    .GetTypes()
+                    .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Tool)))
+                    .ToList();
 
             foreach (var toolType in toolTypes)
             {
@@ -134,7 +140,81 @@ namespace DrawProject.Services
             return (ribbonControls, tools);
         }
 
+        public static (List<UIElement>, List<Filter>) GenerateFiltersRibbonControls(Action<Filter> function1, Action<Filter, List<PropertyInfo>> function2, List<Type> filterTypes = null)
+        {
+            try
+            {
+                var ribbonControls = new List<UIElement>();
+                var tools = new List<Filter>();
 
+
+                if (filterTypes == null)
+                    filterTypes = Assembly.GetExecutingAssembly()
+                        .GetTypes()
+                        .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Filter)))
+                        .ToList();
+
+                foreach (var toolType in filterTypes)
+                {
+                    if (Activator.CreateInstance(toolType) is Filter tool)
+                    {
+                        tools.Add(tool);
+
+
+
+                        var inspectableProps = tool.GetType()
+                            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                            .Where(p => p.GetCustomAttribute<InspectableAttribute>() != null && p.CanRead && p.CanWrite)
+                            .ToList();
+
+                        if (inspectableProps.Any())
+                        {
+                            var splitButton = new RibbonSplitButton
+                            {
+                                Label = tool.Name,
+                                ToolTip = tool.FilterTip,
+                                Command = new RelayCommand(() => function1(tool)),
+                                IsCheckable = false
+                            };
+
+                            var settingsItem = new RibbonMenuItem
+                            {
+                                Header = "Settings...",
+                                Command = new RelayCommand(() => function2(tool, inspectableProps))
+                            };
+
+                            var settingsIcon = FileService.LoadIconFromResource("SettingsIcon.png");
+                            if (settingsIcon != null)
+                            {
+                                settingsItem.ImageSource = settingsIcon;
+                            }
+                            splitButton.Items.Add(settingsItem);
+                            ribbonControls.Add(splitButton);
+                        }
+                        else
+                        {
+                            var button = new RibbonButton
+                            {
+                                Label = tool.Name,
+                                ToolTip = tool.FilterTip,
+                                Command = new RelayCommand(() => function1(tool)),
+                                Focusable = true,
+                                IsHitTestVisible = true,
+                            };
+
+                            ribbonControls.Add(button);
+                        }
+                    }
+                }
+
+                return (ribbonControls, tools);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return (null, null);
+            }
+        }
 
     }
 }

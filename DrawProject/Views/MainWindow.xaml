@@ -73,6 +73,14 @@
             Key="D0"
             Command="{Binding ResetPanelSizesCommand, RelativeSource={RelativeSource AncestorType=fluent:RibbonWindow}}"
             Modifiers="Control" />
+        <KeyBinding
+            Key="Z"
+            Command="{Binding UndoCommand}"
+            Modifiers="Control" />
+        <KeyBinding
+            Key="Z"
+            Command="{Binding RedoCommand}"
+            Modifiers="Control+Shift" />
     </fluent:RibbonWindow.InputBindings>
 
     <Grid>
@@ -245,6 +253,12 @@
                             Command="{Binding ClearCommand}"
                             Header="Clear"
                             SizeDefinition="Middle" />
+                        <fluent:SplitButton
+                            x:Name="Filters"
+                            MinHeight="60"
+                            Margin="2"
+                            Header="Filter"
+                            SizeDefinition="Middle" />
                     </StackPanel>
                 </fluent:RibbonGroupBox>
             </fluent:RibbonTabItem>
@@ -271,6 +285,27 @@
                         x:Name="ToolsPanel"
                         VerticalAlignment="Center"
                         Orientation="Horizontal" />
+                </fluent:RibbonGroupBox>
+            </fluent:RibbonTabItem>
+
+            <fluent:RibbonTabItem Height="Auto" Header="Plugins">
+                <fluent:RibbonGroupBox Height="Auto" Header="Manage">
+                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                        <fluent:Button
+                            MinHeight="60"
+                            Margin="2"
+                            Command="{Binding LoadPluginCommand, RelativeSource={RelativeSource AncestorType=fluent:RibbonWindow}}"
+                            Header="Load plugin"
+                            SizeDefinition="Middle" />
+                    </StackPanel>
+                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                        <fluent:Button
+                            MinHeight="60"
+                            Margin="2"
+                            Command="{Binding OpenPluginDialogCommand, RelativeSource={RelativeSource AncestorType=fluent:RibbonWindow}}"
+                            Header="Plugins"
+                            SizeDefinition="Middle" />
+                    </StackPanel>
                 </fluent:RibbonGroupBox>
             </fluent:RibbonTabItem>
 

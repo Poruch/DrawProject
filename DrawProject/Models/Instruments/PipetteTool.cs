@@ -5,6 +5,7 @@ using System.Windows.Media.Imaging;
 using System.Windows;
 using System.Xml.Linq;
 using DrawProject.Controls;
+using DrawProject.Services.Plugins;
 
 public class SimplePipetteTool : Tool
 {

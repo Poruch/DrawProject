@@ -1,0 +1,379 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="DrawProject.Attributes.InspectableAttribute" Collapsed="true">
+    <Position X="9.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Attributes\InspectableAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Controls.BrushControlPanel" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="9.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAHAAAAAAAACAAAAAAAAAAAAAAAAAAABAACBAAECAAE=</HashCode>
+      <FileName>Controls\BrushControlPanel.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DrawProject.Controls.ColorSlider" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="14.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEECIQCAAAAIggAASAAAAAAAAAAACJBABAgAABQIgQQ=</HashCode>
+      <FileName>Controls\ColorSlider.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DrawProject.Controls.CreateImageDialog" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="9.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAAABAAAAAAAAAAAAAAgAgIAAAAAAAAAAAA=</HashCode>
+      <FileName>Controls\ImageCreateDialog.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DrawProject.Controls.HybridCanvas" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="16.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IABAAACAAAAAUAKEAAQABSAEABASEAIAYABCACACgAA=</HashCode>
+      <FileName>Controls\HybridCanvas.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DrawProject.Controls.ImageSizeDialog" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="7.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAAABAAAAAAAAAAAAAAgAgIAAAAAAAAAAAA=</HashCode>
+      <FileName>Controls\ImageSizeDialog.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DrawProject.Controls.LayersPanelControl" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="16.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AKAAAAAAAIAgAAAAACEAoAAAAQAAAAQEAAAAACAAAgQ=</HashCode>
+      <FileName>Controls\LayerPanelControl.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DrawProject.Controls.ZoomBorder" Collapsed="true">
+    <Position X="11" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAABAAgAAAABAQgCADAAAQAAAAAAAAQCAAAAAAAQAA=</HashCode>
+      <FileName>Controls\ZoomBorder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PropertyEditorControl" Collapsed="true">
+    <Position X="12.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAEAAAAAAAAAAAAgAAAAAAAAAAAAACAAA=</HashCode>
+      <FileName>Controls\PropertyEditorControl.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RelayCommand" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="16.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAEACAAQAAECAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Commands\RelayCommand.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="RelayCommand&lt;T&gt;" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="14.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAEACAAQAAECAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Commands\RelayCommand.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Eraser" Collapsed="true">
+    <Position X="10" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAYAAAAAAIAAAAAAAAQABAAAAAAIAAAAAACAAI=</HashCode>
+      <FileName>Models\Instruments\Eraser.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimplePipetteTool" Collapsed="true">
+    <Position X="14.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIAAAAAAAAAAAAAAAAABAAACAAIAAAAAACAAA=</HashCode>
+      <FileName>Models\Instruments\PipetteTool.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Brush" Collapsed="true">
+    <Position X="0.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEUAAAAAAIgAAAAAAAAAAAAAAAAgAAAAIAgAAAAAA=</HashCode>
+      <FileName>Models\Brush.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Layer" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="14.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAkAAAAAAJAAgAAQAgAEAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>Models\Layer.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="DrawProject.Converters.ColorConverter" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="12.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Converters\ColorConverter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="DrawProject.Converters.ColorToColorNameConverter" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="16.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Converters\ColorToColorNameConverter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="DrawProject.Converters.ObjectToBoolConverter" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="11" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Converters\ObjectToBoolConverter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="DrawProject.Models.Commands.IUndoableCommand" Collapsed="true">
+    <Position X="12.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Commands\IUndoableCommand.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Models.Instruments.BrushInstrument" Collapsed="true">
+    <Position X="16.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAYAAAAAAIAAAAAAAAAABAAAAAAIAAAAAACAAA=</HashCode>
+      <FileName>Models\Instruments\BrushInstrument.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Models.Instruments.FillTool" Collapsed="true">
+    <Position X="1" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgIAACAAQAAAABAREAAABAAAAAQIAEAAAACAAA=</HashCode>
+      <FileName>Models\Instruments\FillTool.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Models.Instruments.InstrumentContext" Collapsed="true">
+    <Position X="11" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAQAIAAAAogAAIAAAAAAAAAgAACAAAAAgAEAgA=</HashCode>
+      <FileName>Models\Instruments\InstrumentContext.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Models.Instruments.TextTool" Collapsed="true">
+    <Position X="5.5" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CIAAAIAIAAQAAABAAAACAAAAIBAAAAIAKABUAEACAAA=</HashCode>
+      <FileName>Models\Instruments\TextTool.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Instruments.EllipseTool" Collapsed="true">
+    <Position X="7.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQIAACAAAAAAAAAAAAAADCDBAAAIAAEAAACAAA=</HashCode>
+      <FileName>Models\Instruments\EllipseTool.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Instruments.LineTool" Collapsed="true">
+    <Position X="12.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQIAAAAAAAAAAgAAAAAABADBAAAIAAEAAACAgA=</HashCode>
+      <FileName>Models\Instruments\LineTool.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Instruments.RectangleTool" Collapsed="true">
+    <Position X="19" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQIAAAAAAQAAAAAAAAAABCDBAAAJAAEAAACAAA=</HashCode>
+      <FileName>Models\Instruments\RectangeTool.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Instruments.StarTool" Collapsed="true">
+    <Position X="3.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAQIAAAAAAAAAIMAAAAAgBCDBAAAIAAEAAACAAA=</HashCode>
+      <FileName>Models\Instruments\StarTool.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Models.BrushShape" Collapsed="true">
+    <Position X="11" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAIgAASAQAABAAogIAQAAAAAAAAAA=</HashCode>
+      <FileName>Models\BrushShape.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Models.ImageDocument" Collapsed="true">
+    <Position X="2.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIFUAAFAFGCEAAAAIBAAAGAEABiEBAAAACEAASEANEA=</HashCode>
+      <FileName>Models\ImageDocument.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DrawProject.Services.CursorLoader" Collapsed="true">
+    <Position X="11" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Services\CursorLoader.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Services.DebugService" Collapsed="true">
+    <Position X="12.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAQAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>Services\DebugService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Services.FileService" Collapsed="true">
+    <Position X="14.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAQAAAAAAAAAAQAAAAAAAAAAACAAAAAAAIAAAAAAA=</HashCode>
+      <FileName>Services\FileService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Services.MouseInputService" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="9.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAoCgAKAAAcQAAiIAQBBgAAIAEAABIAQARIAgCAg=</HashCode>
+      <FileName>Services\MouseInputService.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="DrawProject.Services.UIGeneratorService" Collapsed="true">
+    <Position X="7.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAgAAAAAAAAAA=</HashCode>
+      <FileName>Services\UIGeneratorService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Services.UndoRedoService" Collapsed="true">
+    <Position X="9.25" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIIAAAAABAAEBAAAAAAAAAABAAAAAAAAAAAAAAFAAAA=</HashCode>
+      <FileName>Services\UndoRedoService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.ViewModels.MainViewModel" Collapsed="true">
+    <Position X="5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CjUBIAEgBEBggggAEBFEoCCAgkGAADAEghABBCIGEBE=</HashCode>
+      <FileName>ViewModels\MainViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.ViewModels.ObservableObject" Collapsed="true">
+    <Position X="2.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAIAAAAAAAgAEAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ViewModels\ObserveObject.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DrawProject.MainWindow" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="7.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQAoAhEIICQAAAAAAACAgEAhQgAAAAAAAABAAIQAA=</HashCode>
+      <FileName>Views\MainWindow.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DrawProject.App" Collapsed="true">
+    <Position X="7.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAAAAgAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>App.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Controls.PluginManagerDialog" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="14" Y="11.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAAAAAAAAAAAAACAAAAAAAIAAgAAAAAAAAA=</HashCode>
+      <FileName>Controls\PluginManagerDialog.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="DrawProject.Models.Filers.BlackBorder" Collapsed="true">
+    <Position X="1.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Filers\BlackBorder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Models.AppConfig" Collapsed="true">
+    <Position X="16.25" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAABAAAA=</HashCode>
+      <FileName>Models\AppConfig.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Models.PluginConfig" Collapsed="true">
+    <Position X="14.5" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAIAAAEAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\AppConfig.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Services.Plugins.Filter" Collapsed="true">
+    <Position X="1.5" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Services\Plugins\Filter.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Services.Plugins.MainPlugin" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="12" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAgAAAAAAAgAAAAAAAgAgAAAAAAAgAAAAAA=</HashCode>
+      <FileName>Services\Plugins\MainPlugin.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="DrawProject.Services.Plugins.PluginController" Collapsed="true">
+    <Position X="10.75" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQQIAgQAYAgKGGAAQBACAgAAAAQGhAAAAgAAA=</HashCode>
+      <FileName>Services\Plugins\PluginController.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Services.Plugins.PluginService" Collapsed="true">
+    <Position X="12.75" Y="10.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Services\Plugins\PluginService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Services.Plugins.Tool" Collapsed="true">
+    <Position X="5.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAIAAAAAAAAAAACAAwAABAAAAAAIAAAAAACAAA=</HashCode>
+      <FileName>Services\Plugins\Tool.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DrawProject.Services.ConfigService" Collapsed="true">
+    <Position X="15.75" Y="11.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAwIAAAAAAAAAAACAAAAAAAAQAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Services\ConfigService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="DrawProject.Services.Plugins.IPlugin" Collapsed="true">
+    <Position X="11" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgABAAgIAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Services\Plugins\IPlugin.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="DrawProject.Services.IUndoRedoCommand" Collapsed="true">
+    <Position X="13.5" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABAQAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Services\IUndoRedoCommand.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

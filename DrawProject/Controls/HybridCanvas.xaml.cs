@@ -1,6 +1,7 @@
 ﻿using DrawProject.Models;
 using DrawProject.Models.Instruments;
 using DrawProject.Services;
+using DrawProject.Services.Plugins;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;

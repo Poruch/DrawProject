@@ -7,6 +7,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows;
 using System.Windows.Input;
+using DrawProject.Services.Plugins;
 
 
 namespace DrawProject.Models.Instruments
@@ -36,22 +37,17 @@ namespace DrawProject.Models.Instruments
 
             if (source != null)
             {
-                // Загружаем все пиксели в буфер один раз
                 LoadPixelBuffer(source);
 
-                // Получаем начальный цвет
                 int startX = (int)pos.X;
                 int startY = (int)pos.Y;
                 Color targetColor = GetPixelFromBuffer(startX, startY);
                 Color fillColor = context.Brush.Color;
 
-                // Выполняем заливку в буфере
                 FloodFillBuffer(startX, startY, targetColor, fillColor);
 
-                // Создаем новое изображение из буфера
                 var newBitmap = CreateBitmapFromBuffer(source);
 
-                // Обновляем
                 canvas.ImageDocument.SelectedLayer.UpdatePixels(newBitmap);
                 canvas.ImageDocument.WasChanged = true;
                 canvas.CommitDrawing();
@@ -91,10 +87,10 @@ namespace DrawProject.Models.Instruments
 
             int index = y * _stride + x * 4;
 
-            _pixelBuffer[index] = color.B;     // B
-            _pixelBuffer[index + 1] = color.G; // G
-            _pixelBuffer[index + 2] = color.R; // R
-            _pixelBuffer[index + 3] = color.A; // A
+            _pixelBuffer[index] = color.B;
+            _pixelBuffer[index + 1] = color.G;
+            _pixelBuffer[index + 2] = color.R;
+            _pixelBuffer[index + 3] = color.A;
         }
 
         private void FloodFillBuffer(int startX, int startY, Color targetColor, Color fillColor)
@@ -124,7 +120,6 @@ namespace DrawProject.Models.Instruments
                 SetPixelInBuffer(x, y, fillColor);
                 visited[x, y] = true;
 
-                // Добавляем 4-связных соседей
                 queue.Enqueue(new Point(x + 1, y));
                 queue.Enqueue(new Point(x - 1, y));
                 queue.Enqueue(new Point(x, y + 1));
@@ -137,7 +132,7 @@ namespace DrawProject.Models.Instruments
             return BitmapSource.Create(
                 _width, _height,
                 original.DpiX, original.DpiY,
-                PixelFormats.Bgra32, // или original.Format
+                PixelFormats.Bgra32,
                 null, _pixelBuffer, _stride);
         }
 

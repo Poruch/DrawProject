@@ -3,7 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawProject", "DrawProject\DrawProject.csproj", "{78B22FFF-F8BD-4348-B10C-81DED89575FF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DrawProject", "DrawProject\DrawProject.csproj", "{78B22FFF-F8BD-4348-B10C-81DED89575FF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyDrawExtention", "..\..\Вшэ\2 курс\КПО\MyDrawExtention\MyDrawExtention\MyDrawExtention.csproj", "{0256E9C4-9B0B-4F19-AF84-356C6E31C21F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SuperDeluxEditionPlugin(100$)", "..\..\Вшэ\2 курс\КПО\SuperDeluxEditionPlugin(100$)\SuperDeluxEditionPlugin(100$).csproj", "{75F90B4D-11F0-4479-A45D-F557A4C8F56C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatrixFilter", "..\..\Вшэ\2 курс\КПО\MatrixFilter\MatrixFilter.csproj", "{17F44E6C-E497-4795-BFC9-3F365B60B588}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +21,18 @@ Global
 		{78B22FFF-F8BD-4348-B10C-81DED89575FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78B22FFF-F8BD-4348-B10C-81DED89575FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78B22FFF-F8BD-4348-B10C-81DED89575FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0256E9C4-9B0B-4F19-AF84-356C6E31C21F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0256E9C4-9B0B-4F19-AF84-356C6E31C21F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0256E9C4-9B0B-4F19-AF84-356C6E31C21F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0256E9C4-9B0B-4F19-AF84-356C6E31C21F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75F90B4D-11F0-4479-A45D-F557A4C8F56C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75F90B4D-11F0-4479-A45D-F557A4C8F56C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75F90B4D-11F0-4479-A45D-F557A4C8F56C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75F90B4D-11F0-4479-A45D-F557A4C8F56C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17F44E6C-E497-4795-BFC9-3F365B60B588}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17F44E6C-E497-4795-BFC9-3F365B60B588}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17F44E6C-E497-4795-BFC9-3F365B60B588}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17F44E6C-E497-4795-BFC9-3F365B60B588}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,5 @@
 ﻿using DrawProject.Controls;
+using DrawProject.Services.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Linq;

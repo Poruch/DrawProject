@@ -13,6 +13,8 @@ using Xceed.Wpf.AvalonDock.Layout;
 using System.IO;
 using System.Xml;
 using Xceed.Wpf.AvalonDock.Layout.Serialization;
+using DrawProject.Services.Plugins;
+using DrawProject.Models;
 
 
 namespace DrawProject
@@ -22,38 +24,123 @@ namespace DrawProject
     /// </summary>
     public partial class MainWindow : Fluent.RibbonWindow
     {
+        public ICommand LoadPluginCommand { get; }
         public ICommand ResetPanelSizesCommand { get; }
-        int leftWifth = 150;
-        int rightWifth = 150;
-        MainViewModel model = null;
+        public ICommand OpenPluginDialogCommand { get; }
+        private int leftWifth = 150;
+        private int rightWifth = 150;
+        private MainViewModel model = null;
         public MainWindow()
         {
             InitializeComponent();
             Closing += MainWindow_Closing;
+
             ResetPanelSizesCommand = new RelayCommand(ResetPanelSizes);
+            OpenPluginDialogCommand = new RelayCommand(OpenPluginsWindow);
+            LoadPluginCommand = new RelayCommand(LoadPlugin);
+
             model = DataContext as MainViewModel;
             model.DrawingCanvas = drawingCanvas;
-            var menuItems = model.GenerateToolRibbonControls();
 
-            ToolsGroup.Items.Clear();
+            model.AddPlugin(new PluginController(new MainPlugin()));
 
-            // Добавление новых кнопок
-            foreach (var button in menuItems)
+            foreach (var item in App.Config.Plugins)
             {
-                ToolsGroup.Items.Add(button);
+                try
+                {
+                    var newPlugins = PluginService.GetPluginsFromFile(item.Path);
+                    if (newPlugins == null || newPlugins.Count == 0) continue;
+                    for (int i = 0; i < newPlugins.Count; i++)
+                    {
+                        model.AddPlugin(newPlugins[i]);
+                        item.Name = newPlugins[i].Name;
+                    }
+                    UpdateInterface();
+                }
+                catch
+                {
+                }
             }
+
+            UpdateInterface();
             model.ApplyDefaultTool();
             this.MouseMove += OnMouseMove;
-            this.Loaded += MainWindow_Loaded;
 
 
             SaveOriginalLayout();
         }
-
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        private void UpdateInterface()
         {
-
+            var menuItems = model.UpdateToolRibbonControls();
+            SetToolsMenu(menuItems.Tools);
+            SetFiltersMenu(menuItems.Filters);
         }
+        private void OpenPluginsWindow()
+        {
+            var dialog = new PluginManagerDialog(model.Plugins);
+            if (dialog.ShowDialog() == true)
+            {
+                UpdateInterface();
+            }
+            for (int i = 0; i < model.Plugins.Count; i++)
+            {
+                var plugin = model.Plugins[i];
+                if (plugin.PluginPath == "")
+                    continue;
+                var existingConfig = App.Config.Plugins.FirstOrDefault(cfg => cfg.Name == plugin.Name);
+
+                if (existingConfig == null)
+                {
+                    var newConfig = new PluginConfig
+                    {
+                        Name = plugin.Name,
+                        IsEnabled = plugin.IsEnabled,
+                        Path = plugin.PluginPath
+                    };
+                    App.Config.Plugins.Add(newConfig);
+                }
+                else
+                {
+                    existingConfig.IsEnabled = plugin.IsEnabled;
+                    existingConfig.Path = plugin.PluginPath;
+                }
+            }
+            for (int i = 0; i < App.Config.Plugins.Count; i++)
+            {
+                if (model.Plugins.FirstOrDefault(x => x.Name == App.Config.Plugins[i].Name) == null)
+                {
+                    App.Config.Plugins.RemoveAt(i);
+                }
+            }
+        }
+        private void SetToolsMenu(List<UIElement> toolItems)
+        {
+            ToolsGroup.Items.Clear();
+            foreach (var button in toolItems)
+            {
+                ToolsGroup.Items.Add(button);
+            }
+        }
+        private void SetFiltersMenu(List<UIElement> filtersItems)
+        {
+            Filters.Items.Clear();
+            foreach (var button in filtersItems)
+            {
+                Filters.Items.Add(button);
+            }
+        }
+
+        private void LoadPlugin()
+        {
+            var newPlugins = PluginService.GetPluginsFromFile();
+            if (newPlugins == null) return;
+            for (int i = 0; i < newPlugins.Count; i++)
+            {
+                model.AddPlugin(newPlugins[i]);
+            }
+            UpdateInterface();
+        }
+
         private void DrawingCanvas_Loaded(object sender, RoutedEventArgs e)
         {
             if (DataContext is MainViewModel viewModel)

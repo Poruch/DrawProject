@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System;
 using DrawProject.Controls;
 using System.Windows.Controls;
+using DrawProject.Services.Plugins;
 
 class Eraser : Tool
 {

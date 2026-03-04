@@ -7,11 +7,13 @@ using System.Windows.Controls.Ribbon;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using DrawProject.Attributes;
 using DrawProject.Controls;
 using DrawProject.Models;
 using DrawProject.Models.Instruments;
 using DrawProject.Services;
+using DrawProject.Services.Plugins;
 using static DrawProject.Models.BrushShape;
 
 namespace DrawProject.ViewModels
@@ -75,6 +77,7 @@ namespace DrawProject.ViewModels
         public ICommand ResizeCommand { get; }
 
 
+
         public HybridCanvas DrawingCanvas { get => _drawingCanvas; set => _drawingCanvas = value; }
 
         private ObservableCollection<Layer> _layers = new();
@@ -98,12 +101,46 @@ namespace DrawProject.ViewModels
                 OnPropertyChanged(nameof(SelectedLayerIndex));
             }
         }
-        string currentPath = "";
-        List<Tool> _tools = new List<Tool>();
+
+        public List<PluginController> Plugins { get => _plugins; set => _plugins = value; }
+
+        string _currentPath = "";
+        List<PluginController> _plugins = new List<PluginController>();
+        public void AddPlugin(PluginController plugin)
+        {
+            Plugins.Add(plugin);
+            var couple = UIGeneratorService.GenerateToolRibbonControls(OnToolSelected, ShowSettingsWindow, plugin.InstrumentTypes);
+
+
+            plugin.UIInstruments.AddRange(couple.Item1);
+            plugin.Tools.AddRange(couple.Item2);
+
+            var coupleFilters = UIGeneratorService.GenerateFiltersRibbonControls(OnFilterSelected, ShowSettingsWindow, plugin.FilterTypes);
+
+            plugin.Filters = coupleFilters.Item2;
+            plugin.UIFilters = coupleFilters.Item1;
+
+            plugin.IsEnabledChanged += Plugin_IsEnabledChanged;
+            plugin.IsUploadChanged += Plugin_IsUploadChanged;
+        }
+
+        private void Plugin_IsEnabledChanged(object? sender, EventArgs e)
+        {
+
+        }
+        private void Plugin_IsUploadChanged(object? sender, EventArgs e)
+        {
+            var plugin = (PluginController)sender;
+            if (!plugin.IsUpload)
+            {
+                Plugins.Remove(plugin);
+            }
+        }
+
 
         public void ApplyDefaultTool()
         {
-            OnToolSelected(_tools.FirstOrDefault(x => x is BrushInstrument));
+            OnToolSelected(_plugins[0].Tools.FirstOrDefault(x => x is BrushInstrument));
         }
         //Список инструментов
         public void UpdateImage()
@@ -128,22 +165,51 @@ namespace DrawProject.ViewModels
             MoveLayerDownCommand = new RelayCommand<Layer>(MoveLayerDown);
 
             ResizeCommand = new RelayCommand(ResizeImage);
+
+
             _brush.Color = Colors.Black;
             _brush.Size = 5;
             _brush.Opacity = 1.0f;
             _brush.Hardness = 0.5f;
             _brush.Shape = new CircleBrushShape();
         }
-
-
-        public List<UIElement> GenerateToolRibbonControls()
+        public (List<UIElement> Tools, List<UIElement> Filters) UpdateToolRibbonControls()
         {
-            var t = UIGeneratorService.GenerateToolRibbonControls(OnToolSelected, ShowSettingsWindow);
-            _tools = t.Item2;
-            return t.Item1;
+            List<UIElement> tools = new();
+            List<UIElement> filters = new();
+
+            for (var i = 0; i < Plugins.Count; i++)
+            {
+                var plugin = Plugins[i];
+                if (!plugin.IsUpload)
+                {
+                    Plugins.RemoveAt(i);
+                    continue;
+                }
+                else if (plugin.IsEnabled)
+                {
+                    if (plugin.UIInstruments != null)
+                        tools.AddRange(plugin.UIInstruments);
+                    if (plugin.UIFilters != null)
+                        filters.AddRange(plugin.UIFilters);
+                }
+            }
+
+            return (tools, filters);
+        }
+        private bool _isFiltering;
+        public bool IsFiltering
+        {
+            get => _isFiltering;
+            set { _isFiltering = value; OnPropertyChanged(); }
         }
 
-
+        private double _progressValue;
+        public double ProgressValue
+        {
+            get => _progressValue;
+            set { _progressValue = value; OnPropertyChanged(); }
+        }
         private void ShowSettingsWindow(Tool tool, List<PropertyInfo> properties)
         {
             var window = new Window
@@ -157,7 +223,19 @@ namespace DrawProject.ViewModels
             };
             window.ShowDialog();
         }
-
+        private void ShowSettingsWindow(Filter tool, List<PropertyInfo> properties)
+        {
+            var window = new Window
+            {
+                Title = $"Настройки: {tool.Name}",
+                Width = 300,
+                Height = 250,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = Application.Current.MainWindow,
+                Content = new PropertyEditorControl(properties) { DataContext = tool }
+            };
+            window.ShowDialog();
+        }
         private void OnToolSelected(Tool tool)
         {
             ActiveTool = tool;
@@ -165,6 +243,25 @@ namespace DrawProject.ViewModels
                 _drawingCanvas.Cursor = CursorLoader.LoadCursor(tool.CursorPath);
         }
 
+        private async void OnFilterSelected(Filter filter)
+        {
+            if (CurrentDoc == null) return;
+            IsFiltering = true;
+            var progress = new Progress<double>(p => ProgressValue = p);
+            try
+            {
+                await CurrentDoc.ApplyFilterAsync(filter, progress);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка: {ex.Message}", "Фильтр", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsFiltering = false;
+                ProgressValue = 0;
+            }
+        }
         // === МЕТОДЫ ===
         private void ClearCanvas()
         {
@@ -212,7 +309,7 @@ namespace DrawProject.ViewModels
             }
 
 
-            currentPath = source.Item2;
+            _currentPath = source.Item2;
             CreateDocument((int)source.Item1.Width, (int)source.Item1.Height);
             CurrentDoc.CreateNewImage(source.Item1);
         }
@@ -232,19 +329,20 @@ namespace DrawProject.ViewModels
             }
         }
 
+
         private void SaveImage()
         {
             if (CurrentDoc == null) return;
 
 
-            if (currentPath == "")
+            if (_currentPath == "")
             {
-                currentPath = FileService.GetPath();
-                if (currentPath != "")
+                _currentPath = FileService.GetPath();
+                if (_currentPath != "")
                 {
                     try
                     {
-                        FileService.SaveBitmapToFile(CurrentDoc.GetCompositeImage(), currentPath);
+                        FileService.SaveBitmapToFile(CurrentDoc.GetCompositeImage(), _currentPath);
                     }
                     catch (Exception ex)
                     {
@@ -254,7 +352,7 @@ namespace DrawProject.ViewModels
             }
             else
             {
-                FileService.SaveBitmapToFile(CurrentDoc.GetCompositeImage(), currentPath);
+                FileService.SaveBitmapToFile(CurrentDoc.GetCompositeImage(), _currentPath);
             }
             CurrentDoc.IsUnSaved = false;
 

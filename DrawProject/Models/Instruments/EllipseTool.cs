@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Controls;
 using DrawProject.Attributes;
+using DrawProject.Services.Plugins;
 
 namespace DrawProject.Instruments
 {
