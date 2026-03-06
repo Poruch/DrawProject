@@ -32,18 +32,37 @@ namespace DrawProject
         private MainViewModel model = null;
         public MainWindow()
         {
-            InitializeComponent();
-            Closing += MainWindow_Closing;
+            try
+            {
+                InitializeComponent();
+                Loaded += MainWindow_Loaded;
+                Closing += MainWindow_Closing;
 
-            ResetPanelSizesCommand = new RelayCommand(ResetPanelSizes);
-            OpenPluginDialogCommand = new RelayCommand(OpenPluginsWindow);
-            LoadPluginCommand = new RelayCommand(LoadPlugin);
+                ResetPanelSizesCommand = new RelayCommand(ResetPanelSizes);
+                OpenPluginDialogCommand = new RelayCommand(OpenPluginsWindow);
+                LoadPluginCommand = new RelayCommand(LoadPlugin);
 
-            model = DataContext as MainViewModel;
-            model.DrawingCanvas = drawingCanvas;
+                model = DataContext as MainViewModel;
+                model.DrawingCanvas = drawingCanvas;
 
-            model.AddPlugin(new PluginController(new MainPlugin()));
+                model.AddPlugin(new PluginController(new MainPlugin()));
 
+                UpdateInterface();
+                model.ApplyDefaultTool();
+                this.MouseMove += OnMouseMove;
+
+
+                SaveOriginalLayout();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Что то пошло вообще не так");
+                Application.Current.Shutdown();
+            }
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
             foreach (var item in App.Config.Plugins)
             {
                 try
@@ -59,16 +78,11 @@ namespace DrawProject
                 }
                 catch
                 {
+                    MessageBox.Show("Проблема с файлом конфигурации, удалите его");
                 }
             }
-
-            UpdateInterface();
-            model.ApplyDefaultTool();
-            this.MouseMove += OnMouseMove;
-
-
-            SaveOriginalLayout();
         }
+
         private void UpdateInterface()
         {
             var menuItems = model.UpdateToolRibbonControls();

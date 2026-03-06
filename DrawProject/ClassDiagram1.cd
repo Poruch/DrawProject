@@ -248,7 +248,7 @@
   <Class Name="DrawProject.Services.UIGeneratorService" Collapsed="true">
     <Position X="7.5" Y="7.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAgAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAgAAAEAAAAAAgAAAAAAAAAA=</HashCode>
       <FileName>Services\UIGeneratorService.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -262,7 +262,7 @@
   <Class Name="DrawProject.ViewModels.MainViewModel" Collapsed="true">
     <Position X="5" Y="4.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>CjUBIAEgBEBggggAEBFEoCCAgkGAADAEghABBCIGEBE=</HashCode>
+      <HashCode>CjUBICEgBEJggggAEBFEoCCAgkGAADAEghARBiIGEBE=</HashCode>
       <FileName>ViewModels\MainViewModel.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -300,7 +300,7 @@
   <Class Name="DrawProject.Models.Filers.BlackBorder" Collapsed="true">
     <Position X="1.5" Y="8.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAABAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAACBAABAAAAAAAAAAAAAAAIAAAAAAAAAAAAAA=</HashCode>
       <FileName>Models\Filers\BlackBorder.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -321,7 +321,7 @@
   <Class Name="DrawProject.Services.Plugins.Filter" Collapsed="true">
     <Position X="1.5" Y="7" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAABAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAIAAAABAABAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Services\Plugins\Filter.cs</FileName>
     </TypeIdentifier>
   </Class>

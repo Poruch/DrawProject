@@ -212,7 +212,7 @@ namespace DrawProject.Services
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
-                return (null, null);
+                return (new(), new());
             }
         }
 

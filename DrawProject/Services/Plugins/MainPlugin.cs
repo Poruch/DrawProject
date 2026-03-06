@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
+using DrawProject.Models.Filters;
 
 namespace DrawProject.Services.Plugins
 {
@@ -31,7 +32,7 @@ namespace DrawProject.Services.Plugins
         {
             get
             {
-                return new List<Type>() { typeof(BlackBorder) };
+                return new List<Type>() { typeof(BlackBorder), typeof(TestFilter) };
             }
         }
     }

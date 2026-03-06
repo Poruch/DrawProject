@@ -77,6 +77,10 @@ namespace DrawProject.ViewModels
         public ICommand ResizeCommand { get; }
 
 
+        private CancellationTokenSource _currentFilterCts;
+
+        public ICommand CancelFilterCommand { get; }
+
 
         public HybridCanvas DrawingCanvas { get => _drawingCanvas; set => _drawingCanvas = value; }
 
@@ -115,7 +119,7 @@ namespace DrawProject.ViewModels
             plugin.UIInstruments.AddRange(couple.Item1);
             plugin.Tools.AddRange(couple.Item2);
 
-            var coupleFilters = UIGeneratorService.GenerateFiltersRibbonControls(OnFilterSelected, ShowSettingsWindow, plugin.FilterTypes);
+            var coupleFilters = UIGeneratorService.GenerateFiltersRibbonControls((f) => { OnFilterSelected(f); }, ShowSettingsWindow, plugin.FilterTypes);
 
             plugin.Filters = coupleFilters.Item2;
             plugin.UIFilters = coupleFilters.Item1;
@@ -165,7 +169,10 @@ namespace DrawProject.ViewModels
             MoveLayerDownCommand = new RelayCommand<Layer>(MoveLayerDown);
 
             ResizeCommand = new RelayCommand(ResizeImage);
-
+            CancelFilterCommand = new RelayCommand(() =>
+            {
+                _currentFilterCts.Cancel();
+            });
 
             _brush.Color = Colors.Black;
             _brush.Size = 5;
@@ -201,9 +208,9 @@ namespace DrawProject.ViewModels
         public bool IsFiltering
         {
             get => _isFiltering;
-            set { _isFiltering = value; OnPropertyChanged(); }
+            set { _isFiltering = value; OnPropertyChanged(); OnPropertyChanged("FilterOverlayVisibility"); }
         }
-
+        public Visibility FilterOverlayVisibility => IsFiltering ? Visibility.Visible : Visibility.Collapsed;
         private double _progressValue;
         public double ProgressValue
         {
@@ -246,20 +253,33 @@ namespace DrawProject.ViewModels
         private async void OnFilterSelected(Filter filter)
         {
             if (CurrentDoc == null) return;
+
+            _currentFilterCts?.Cancel();
+            _currentFilterCts = new CancellationTokenSource();
+
             IsFiltering = true;
+            ProgressValue = 0;
+
             var progress = new Progress<double>(p => ProgressValue = p);
+
             try
             {
-                await CurrentDoc.ApplyFilterAsync(filter, progress);
+                await CurrentDoc.ApplyFilterAsync(filter, progress, _currentFilterCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Фильтр отменен - можно ничего не делать или показать сообщение
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка: {ex.Message}", "Фильтр", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка при применении фильтра: {ex.Message}");
             }
             finally
             {
                 IsFiltering = false;
                 ProgressValue = 0;
+                _currentFilterCts?.Dispose();
+                _currentFilterCts = null;
             }
         }
         // === МЕТОДЫ ===
