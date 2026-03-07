@@ -292,11 +292,11 @@ namespace DrawProject.Models
 
         private void ApplyEraserAt(int i, byte alpha = 255)
         {
+            byte eraserMask = _vectorBuffer[i + 3];
+            if (eraserMask == 0) return;
 
-            byte eraserAlpha = _vectorBuffer[i + 3] == 0 ? _rasterBuffer[i + 3] : alpha;
-            if (eraserAlpha == 0) return;
+            float strength = alpha / 255f;
 
-            float strength = eraserAlpha / 255f;
             float currentAlpha = _rasterBuffer[i + 3] / 255f;
             float newAlpha = currentAlpha * (1 - strength);
 
@@ -308,8 +308,6 @@ namespace DrawProject.Models
                 _rasterBuffer[i + 1] = 0;
                 _rasterBuffer[i + 2] = 0;
             }
-
-            isUnSaved = true;
         }
 
 

@@ -69,7 +69,6 @@ namespace DrawProject.ViewModels
         public ICommand MoveLayerDownCommand { get; set; }
         public ICommand SelectPipetteCommand { get; }
         public ICommand MoveLayerUpCommand { get; set; }
-        public ICommand SelectLayerCommand { get; set; }
 
         public ICommand AddLayerCommand { get; }
 
@@ -99,7 +98,8 @@ namespace DrawProject.ViewModels
         private int _selectedLayerIndex = 0;
         public int SelectedLayerIndex
         {
-            get => _selectedLayerIndex; set
+            get => _selectedLayerIndex;
+            set
             {
                 CurrentDoc.SelectedLayerIndex = value;
                 _selectedLayerIndex = CurrentDoc.SelectedLayerIndex;
@@ -169,6 +169,7 @@ namespace DrawProject.ViewModels
             RemoveLayerCommand = new RelayCommand(RemoveLayer);
             MoveLayerUpCommand = new RelayCommand<Layer>(MoveLayerUp);
             MoveLayerDownCommand = new RelayCommand<Layer>(MoveLayerDown);
+
 
             ResizeCommand = new RelayCommand(ResizeImage);
             CancelFilterCommand = new RelayCommand(() =>
@@ -431,7 +432,11 @@ namespace DrawProject.ViewModels
         {
             if (CurrentDoc == null) return;
 
-            FileService.SaveBitmapToPng(CurrentDoc.GetCompositeImage());
+            var result = FileService.SaveBitmapToPng(CurrentDoc.GetCompositeImage());
+            if (result.Item1)
+            {
+                _currentPath = result.Path;
+            }
             CurrentDoc.IsUnSaved = false;
         }
 
@@ -442,7 +447,7 @@ namespace DrawProject.ViewModels
             if (SelectedLayerIndex == -1) return;
             int tmp = SelectedLayerIndex;
             Layers.RemoveAt(SelectedLayerIndex);
-            SelectedLayerIndex = tmp - 1;
+            SelectedLayerIndex = Math.Clamp(tmp - 1, 0, _layers.Count - 1);
         }
         private void MoveLayerUp(Layer layer)
         {

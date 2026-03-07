@@ -61,13 +61,13 @@ namespace DrawProject.Services
         }
 
 
-        public static bool SaveBitmapToPng(BitmapSource bitmap, Window parentWindow = null)
+        public static (bool, string Path) SaveBitmapToPng(BitmapSource bitmap, Window parentWindow = null)
         {
             if (bitmap == null)
             {
                 MessageBox.Show("Нет изображения для сохранения", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
+                return (false, "");
             }
 
             try
@@ -91,16 +91,16 @@ namespace DrawProject.Services
                 if (result == true)
                 {
                     // Сохраняем в выбранном формате
-                    return SaveBitmapToFile(bitmap, saveFileDialog.FileName);
+                    return (SaveBitmapToFile(bitmap, saveFileDialog.FileName), saveFileDialog.FileName);
                 }
 
-                return false;
+                return (false, "");
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка при сохранении: {ex.Message}", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
+                return (false, "");
             }
         }
 

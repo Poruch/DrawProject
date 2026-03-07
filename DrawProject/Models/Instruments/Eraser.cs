@@ -15,6 +15,7 @@ class Eraser : Tool
         Name = "Eraser";
         ToolTip = "Set pixels max alfa channel";
         CursorPath = "pack://application:,,,/Resources/Cursors/eraser.png";
+        CommitOnMouseUp = true;
     }
     Brush Brush { get; set; }
     public Canvas VectorOverlay { get; set; }
@@ -36,49 +37,38 @@ class Eraser : Tool
 
     public override void ApplyTool(InstrumentContext context)
     {
-        // Создаем превью элемента кисти
-        var preview = Brush.Shape.GetPreviewElement(context.Position,
-            (int)(context.Brush.Size * context.Pressure), Color.FromArgb(255, 255, 255, 255), Brush.Opacity);
-        VectorOverlay.Children.Add(preview);
-        _currentStroke.Add(preview);
-        // Интерполяция для плавного рисования
-        if (context.LastPosition != default)
+        if (context.LastPosition == default)
         {
-            //InterpolateBrushPoints(context.LastPosition, context.Position);
+            // Первая точка штриха
+            AddPreview(context.Position, context);
+        }
+        else
+        {
+            // Интерполяция между LastPosition и Position
+            int steps = Math.Max(1, context.Steps);
+            for (int i = 1; i <= steps; i++)
+            {
+                double t = (double)i / steps;
+                double x = context.LastPosition.X + (context.Position.X - context.LastPosition.X) * t;
+                double y = context.LastPosition.Y + (context.Position.Y - context.LastPosition.Y) * t;
+                AddPreview(new Point(x, y), context);
+            }
         }
     }
-
+    private void AddPreview(Point pos, InstrumentContext context)
+    {
+        var preview = Brush.Shape.GetPreviewElement(
+            pos,
+            (int)(context.Brush.Size * context.Pressure),
+            Color.FromArgb(255, 255, 255, 255), // для ластика цвет не важен
+            Brush.Opacity);
+        VectorOverlay.Children.Add(preview);
+        _currentStroke.Add(preview);
+    }
     public override void OnMouseUp(InstrumentContext context)
     {
 
     }
 
-    private void InterpolateBrushPoints(Point from, Point to)
-    {
-        if (Brush == null) return;
 
-        float distance = (float)Math.Sqrt(
-            Math.Pow(to.X - from.X, 2) +
-            Math.Pow(to.Y - from.Y, 2));
-
-        float spacing = Brush.Spacing * Brush.Size;
-        if (distance <= spacing) return;
-
-        int steps = (int)(distance / spacing);
-
-        for (int i = 1; i < steps; i++)
-        {
-            float t = i / (float)steps;
-            Point interpolated = new Point(
-                from.X + (to.X - from.X) * t,
-                from.Y + (to.Y - from.Y) * t);
-
-            // Добавляем промежуточные превью
-            var preview = Brush.Shape.GetPreviewElement(interpolated,
-                Brush.Size, Color.FromArgb(255, 255, 255, 255), Brush.Opacity);
-
-            VectorOverlay.Children.Add(preview);
-            _currentStroke.Add(preview);
-        }
-    }
 }

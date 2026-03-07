@@ -409,8 +409,7 @@
                                 MoveLayerDownCommand="{Binding MoveLayerDownCommand}"
                                 MoveLayerUpCommand="{Binding MoveLayerUpCommand}"
                                 RemoveLayerCommand="{Binding RemoveLayerCommand}"
-                                SelectLayerCommand="{Binding SelectLayerCommand}"
-                                SelectedLayerIndex="{Binding SelectedLayerIndex}" />
+                                SelectedLayerIndex="{Binding SelectedLayerIndex, Mode=TwoWay}" />
                         </avalon:LayoutAnchorable>
                     </avalon:LayoutAnchorablePane>
 

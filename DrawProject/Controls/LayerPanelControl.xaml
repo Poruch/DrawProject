@@ -56,7 +56,7 @@
                 BorderThickness="0"
                 ItemsSource="{Binding Layers, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
-                SelectedIndex="{Binding SelectedLayerIndex, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                SelectedIndex="{Binding SelectedLayerIndex, Mode=TwoWay, RelativeSource={RelativeSource AncestorType=UserControl}}">
                 <!--  Шаблон элемента  -->
                 <ListBox.ItemTemplate>
                     <DataTemplate>
@@ -88,37 +88,14 @@
                                     </Grid>
                                 </Border>
 
-                                <!--  Кнопка выбора слоя (по клику на имя)  -->
-                                <Button
-                                    Padding="5,0"
-                                    HorizontalAlignment="Stretch"
-                                    HorizontalContentAlignment="Left"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    Command="{Binding DataContext.SelectLayerCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                    CommandParameter="{Binding}"
-                                    Content="{Binding Name}">
-                                    <Button.Style>
-                                        <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border Background="Transparent" CornerRadius="2">
-                                                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" />
-                                                        </Border>
-                                                        <ControlTemplate.Triggers>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter Property="Background" Value="#F0F0F0" />
-                                                            </Trigger>
-                                                        </ControlTemplate.Triggers>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
+                                <!--  Имя слоя (просто текст)  -->
+                                <TextBlock
+                                    Margin="5,0,0,0"
+                                    VerticalAlignment="Center"
+                                    DockPanel.Dock="Left"
+                                    Text="{Binding Name}" />
 
-                                <!--  Кнопки перемещения слоя  -->
+                                <!--  Кнопки перемещения  -->
                                 <StackPanel
                                     Width="25"
                                     DockPanel.Dock="Right"

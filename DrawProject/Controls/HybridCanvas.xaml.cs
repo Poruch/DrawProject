@@ -112,14 +112,13 @@ namespace DrawProject.Controls
         Queue<InstrumentContext> _mousePoints = new Queue<InstrumentContext>();
         private void CompositionTarget_Rendering(object sender, EventArgs e)
         {
-            if (!_isDrawing) return;
+            if (!_isDrawing && _mousePoints.Count == 0) return;
 
-            // Интерполируем и рисуем
-            var count = _mousePoints.Count;
-            for (int i = 0; i < count - 1; i++)
+            // Обрабатываем все накопившиеся контексты
+            while (_mousePoints.Count > 0)
             {
-                var cotext = _mousePoints.Dequeue();
-                Tool?.ApplyTool(cotext);
+                var ctx = _mousePoints.Dequeue();
+                Tool?.ApplyTool(ctx);
             }
         }
 
@@ -144,8 +143,9 @@ namespace DrawProject.Controls
             _isDrawing = true;
 
             var point = e.GetPosition(this);
-            var context = new InstrumentContext(this, e, default);
+            var context = new InstrumentContext(this, e, null);
             Tool?.OnMouseDown(context);
+            _mousePoints.Enqueue(context);
             _lastContext = context;
             BrushSize = Brush.Size;
             CaptureMouse();
@@ -153,22 +153,19 @@ namespace DrawProject.Controls
 
         private void OnMouseUp(object sender, MouseButtonEventArgs e)
         {
+            _lastContext = null;
             if (!_isDrawing) return;
 
             _isDrawing = false;
             ReleaseMouseCapture();
 
-            var context = new InstrumentContext(this, e, default);
+            var context = new InstrumentContext(this, e, _lastContext == null ? null : _lastContext.Position);
             Tool?.OnMouseUp(context);
 
-            _lastContext = null;
+
             if (Tool.CommitOnMouseUp)
                 CommitDrawing();
         }
-
-
-
-
 
         private void OnCanvasMouseWheel(object sender, MouseWheelEventArgs e)
         {
