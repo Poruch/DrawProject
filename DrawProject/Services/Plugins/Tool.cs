@@ -13,7 +13,7 @@ namespace DrawProject.Services.Plugins
 
         public bool CommitOnMouseUp = true;
         public abstract void OnMouseDown(InstrumentContext context);
-        public abstract void OnMouseMove(InstrumentContext context);
+        public abstract void ApplyTool(InstrumentContext context);
         public abstract void OnMouseUp(InstrumentContext context);
         public abstract void OnMouseLeave(InstrumentContext context);
 

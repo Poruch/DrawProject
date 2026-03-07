@@ -223,7 +223,7 @@ namespace DrawProject.Models.Instruments
             }
         }
 
-        public override void OnMouseMove(InstrumentContext context)
+        public override void ApplyTool(InstrumentContext context)
         {
             // При движении мыши в режиме размещения можно двигать текст
             if (_isPlacingMode && _editBorder != null && Mouse.LeftButton == MouseButtonState.Pressed)

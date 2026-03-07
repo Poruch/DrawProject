@@ -29,6 +29,8 @@ namespace DrawProject.Models.Instruments
         public bool IsLeftButtonPressed => Mouse.LeftButton == MouseButtonState.Pressed;
         public bool IsPenActive { get; private set; }
 
+        public int Steps { get; set; } = 0;
+        public double Distance { get; set; } = 0;
         // === Конструкторы ===
 
         public InstrumentContext(HybridCanvas canvas, MouseButtonEventArgs e, Point? lastPosition = null)
@@ -41,6 +43,9 @@ namespace DrawProject.Models.Instruments
             VectorOverlay = canvas.GetVectorOverlay();
             UpdatePressure();
             LastPosition = lastPosition != null ? lastPosition.Value : Position;
+
+            Distance = Math.Max(Math.Abs(Position.X - LastPosition.X), Math.Abs(Position.Y - LastPosition.Y));
+            Steps = (int)Math.Ceiling(Distance);
         }
 
         public InstrumentContext(HybridCanvas canvas, MouseEventArgs e, Point? lastPosition = null)
@@ -52,7 +57,8 @@ namespace DrawProject.Models.Instruments
             Brush = canvas.Brush;
             UpdatePressure();
             LastPosition = lastPosition != null ? lastPosition.Value : Position;
-
+            Distance = Math.Max(Math.Abs(Position.X - LastPosition.X), Math.Abs(Position.Y - LastPosition.Y));
+            Steps = (int)Math.Ceiling(Distance);
         }
 
         public InstrumentContext(HybridCanvas canvas, Point position, Point? lastPosition = null)
@@ -63,6 +69,8 @@ namespace DrawProject.Models.Instruments
             Brush = canvas.Brush;
             UpdatePressure();
             LastPosition = lastPosition != null ? lastPosition.Value : Position;
+            Distance = Math.Max(Math.Abs(Position.X - LastPosition.X), Math.Abs(Position.Y - LastPosition.Y));
+            Steps = (int)Math.Ceiling(Distance);
         }
 
         /// <summary>

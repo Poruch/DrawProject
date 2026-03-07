@@ -144,7 +144,7 @@ namespace DrawProject.Models.Instruments
                    Math.Abs(c1.B - c2.B) <= tolerance;
         }
 
-        public override void OnMouseMove(InstrumentContext context)
+        public override void ApplyTool(InstrumentContext context)
         {
 
         }

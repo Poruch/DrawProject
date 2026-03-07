@@ -44,7 +44,7 @@ namespace DrawProject.Instruments
             context.VectorOverlay.Children.Add(_selectionRect);
         }
 
-        public override void OnMouseMove(InstrumentContext context)
+        public override void ApplyTool(InstrumentContext context)
         {
             if (!_isSelecting) return;
 
@@ -118,7 +118,7 @@ namespace DrawProject.Instruments
             }
         }
 
-        public override void OnMouseMove(InstrumentContext context)
+        public override void ApplyTool(InstrumentContext context)
         {
             if (!_isMoving) return;
 
@@ -199,7 +199,7 @@ namespace DrawProject.Instruments
             }
         }
 
-        public override void OnMouseMove(InstrumentContext context)
+        public override void ApplyTool(InstrumentContext context)
         {
             if (_mode == TransformMode.None) return;
 

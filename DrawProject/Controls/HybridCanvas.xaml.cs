@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using static DrawProject.Services.MouseInputService;
 
 namespace DrawProject.Controls
 {
@@ -74,6 +75,8 @@ namespace DrawProject.Controls
         {
             InitializeComponent();
             InitializeLayers();
+
+            CompositionTarget.Rendering += CompositionTarget_Rendering;
         }
 
         private void InitializeLayers()
@@ -105,19 +108,34 @@ namespace DrawProject.Controls
         }
 
 
+        InstrumentContext _lastContext = null;
+        Queue<InstrumentContext> _mousePoints = new Queue<InstrumentContext>();
+        private void CompositionTarget_Rendering(object sender, EventArgs e)
+        {
+            if (!_isDrawing) return;
+
+            // Интерполируем и рисуем
+            var count = _mousePoints.Count;
+            for (int i = 0; i < count - 1; i++)
+            {
+                var cotext = _mousePoints.Dequeue();
+                Tool?.ApplyTool(cotext);
+            }
+        }
+
+        private void ProcessingPoints(InstrumentContext context)
+        {
+
+        }
         // === ВВОД МЫШИ (UI поток) ===
         private void OnMouseMove(object sender, MouseEventArgs e)
         {
             if (!_isDrawing) return;
 
-            var context = new InstrumentContext(this, e, default);
-            Tool?.OnMouseMove(context);
+            var context = new InstrumentContext(this, e, _lastContext == null ? null : _lastContext.Position);
+            _lastContext = context;
+            _mousePoints.Enqueue(context);
         }
-
-
-
-
-
         // === УПРАВЛЕНИЕ СОСТОЯНИЕМ ===
         private void OnMouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -128,7 +146,7 @@ namespace DrawProject.Controls
             var point = e.GetPosition(this);
             var context = new InstrumentContext(this, e, default);
             Tool?.OnMouseDown(context);
-
+            _lastContext = context;
             BrushSize = Brush.Size;
             CaptureMouse();
         }
@@ -143,7 +161,7 @@ namespace DrawProject.Controls
             var context = new InstrumentContext(this, e, default);
             Tool?.OnMouseUp(context);
 
-
+            _lastContext = null;
             if (Tool.CommitOnMouseUp)
                 CommitDrawing();
         }

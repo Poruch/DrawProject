@@ -60,7 +60,7 @@ public class SimplePipetteTool : Tool
         return null;
     }
 
-    public override void OnMouseMove(InstrumentContext context) { }
+    public override void ApplyTool(InstrumentContext context) { }
     public override void OnMouseUp(InstrumentContext context) { }
     public override void OnMouseLeave(InstrumentContext context) { }
 }

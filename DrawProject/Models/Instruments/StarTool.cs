@@ -43,7 +43,7 @@ namespace DrawProject.Instruments
             Debug.WriteLine($"[Star] Drawing started at {_startPoint}");
         }
 
-        public override void OnMouseMove(InstrumentContext context)
+        public override void ApplyTool(InstrumentContext context)
         {
             if (!_isDrawing || context.Canvas == null || context.Canvas.Brush == null) return;
 

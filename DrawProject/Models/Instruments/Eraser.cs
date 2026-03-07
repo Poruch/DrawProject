@@ -34,7 +34,7 @@ class Eraser : Tool
 
     }
 
-    public override void OnMouseMove(InstrumentContext context)
+    public override void ApplyTool(InstrumentContext context)
     {
         // Создаем превью элемента кисти
         var preview = Brush.Shape.GetPreviewElement(context.Position,

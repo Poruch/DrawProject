@@ -145,7 +145,7 @@ namespace DrawProject.ViewModels
 
         public void ApplyDefaultTool()
         {
-            OnToolSelected(_plugins[0].Tools.FirstOrDefault(x => x is BrushInstrument));
+            OnToolSelected(_plugins[0].Tools.FirstOrDefault(x => x is BrushTool));
         }
         //Список инструментов
         public void UpdateImage()
