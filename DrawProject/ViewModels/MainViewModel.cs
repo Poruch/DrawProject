@@ -7,6 +7,7 @@ using System.Windows.Controls.Ribbon;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using DrawProject.Attributes;
 using DrawProject.Controls;
@@ -149,7 +150,8 @@ namespace DrawProject.ViewModels
         //Список инструментов
         public void UpdateImage()
         {
-            CurrentDoc.WasChanged = true;
+            if (CurrentDoc != null)
+                CurrentDoc.WasChanged = true;
         }
         // === КОНСТРУКТОР ===
         public MainViewModel()
@@ -205,6 +207,13 @@ namespace DrawProject.ViewModels
             return (tools, filters);
         }
         private bool _isFiltering;
+        private bool _canCancel = true;
+        public bool CanCancelFiltering
+        {
+            get => _canCancel;
+            set { _canCancel = value; OnPropertyChanged(); OnPropertyChanged("CanCancelFilteringVisibility"); }
+        }
+        public Visibility CanCancelFilteringVisibility => _canCancel ? Visibility.Visible : Visibility.Collapsed;
         public bool IsFiltering
         {
             get => _isFiltering;
@@ -258,6 +267,7 @@ namespace DrawProject.ViewModels
             _currentFilterCts = new CancellationTokenSource();
 
             IsFiltering = true;
+            CanCancelFiltering = filter.SupportsCancellation;
             ProgressValue = 0;
 
             var progress = new Progress<double>(p => ProgressValue = p);
@@ -311,17 +321,52 @@ namespace DrawProject.ViewModels
                 var resolution = dialog.Resolution;
 
                 // Создаем документ
-                CreateDocument((int)width, (int)height);
+                if (!CreateDocument((int)width, (int)height))
+                {
+                    MessageBox.Show("Ошибка, не удалось создать новый документ");
+                    return;
+                }
             }
             UpdateImage();
         }
-        private void CreateDocument(int width, int height)
+        private bool CreateDocument(int width, int height)
         {
+            if (CurrentDoc != null)
+            {
+                MessageBoxResult result = MessageBox.Show(
+                "У вас есть несохраненные изменения. Сохранить перед открытием нового документа?",
+                "Подтверждение выхода",
+                MessageBoxButton.YesNoCancel,
+                MessageBoxImage.Warning);
+
+                switch (result)
+                {
+                    case MessageBoxResult.Yes:
+                        // Сохранить и выйти
+                        try
+                        {
+                            SaveCommand.Execute(null);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex);
+                        }
+                        break;
+
+                    case MessageBoxResult.No:
+                        break;
+
+                    case MessageBoxResult.Cancel:
+                        return false;
+                }
+            }
             CurrentDoc = new ImageDocument(width, height);
             UpdateImage();
+            return true;
         }
         private void OpenImage()
         {
+
             var source = FileService.OpenFileImage();
             if (source.Item1 == null)
             {
@@ -330,7 +375,11 @@ namespace DrawProject.ViewModels
 
 
             _currentPath = source.Item2;
-            CreateDocument((int)source.Item1.Width, (int)source.Item1.Height);
+            if (!CreateDocument((int)source.Item1.Width, (int)source.Item1.Height))
+            {
+                MessageBox.Show("Ошибка, не удалось создать новый документ");
+                return;
+            }
             CurrentDoc.CreateNewImage(source.Item1);
         }
 

@@ -56,7 +56,7 @@ namespace DrawProject
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Что то пошло вообще не так");
+                MessageBox.Show("Что то пошло вообще не так \n" + ex.Message);
                 Application.Current.Shutdown();
             }
         }

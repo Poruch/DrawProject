@@ -59,9 +59,19 @@
 		<Content Include="Plugins\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
 
-		<Content Include="Resources\**">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
+
+	<ItemGroup>
+		<Content Remove="Resources\checkerboard.png" />
+		<Content Remove="Resources\Cursors\ellipse-outline.png" />
+		<Content Remove="Resources\Cursors\eraser.png" />
+		<Content Remove="Resources\Cursors\eyedropper.png" />
+		<Content Remove="Resources\Cursors\format-color-fill.png" />
+		<Content Remove="Resources\Cursors\pen.png" />
+		<Content Remove="Resources\Cursors\rectangle-outline.png" />
+		<Content Remove="Resources\Cursors\star.png" />
+		<Content Remove="Resources\Cursors\text-box-edit-outline.png" />
+		<Content Remove="Resources\Cursors\vector-line.png" />
 	</ItemGroup>
 </Project>

@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using System;
 using System.Threading;
 using DrawProject.Services.Plugins;
+using DrawProject.Attributes;
 
 namespace DrawProject.Models.Filters
 {
@@ -12,6 +13,7 @@ namespace DrawProject.Models.Filters
         /// <summary>
         /// Толщина рамки в пикселях.
         /// </summary>
+        [Inspectable("Ширина границы")]
         public int BorderSize { get; set; } = 1;
 
         public BlackBorder()

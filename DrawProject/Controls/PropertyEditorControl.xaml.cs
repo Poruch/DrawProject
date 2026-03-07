@@ -33,7 +33,6 @@ public class PropertyEditorControl : StackPanel
 
             if (type == typeof(bool))
             {
-                // Для bool: подпись + CheckBox в одной строке (слева направо)
                 var stackPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
 
                 var label = new Label

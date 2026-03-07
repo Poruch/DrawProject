@@ -226,20 +226,34 @@ namespace DrawProject.Models
         }
 
         // === ПЕРЕНОС ВЕКТОРА В РАСТР ===
-        public void ApplyVectorLayer(BitmapSource vectorLayer, byte alpha = 255, bool isEraser = false)
+        public void ApplyVectorLayer(BitmapSource vectorLayer, byte alpha = 255, bool isEraser = false, Rect? selectionRect = null)
         {
             if (vectorLayer == null || SelectedLayerIndex == -1) return;
             vectorLayer.CopyPixels(_vectorBuffer, _stride, 0);
 
             _layers[SelectedLayerIndex].Source.CopyPixels(_rasterBuffer, _stride, 0);
 
-            if (isEraser)
+            int minX = 0, minY = 0, maxX = Width, maxY = Height;
+            if (selectionRect.HasValue)
             {
-                ApplyEraser(_rasterBuffer, _vectorBuffer, alpha);
+                var r = selectionRect.Value;
+                minX = (int)Math.Max(0, r.X);
+                minY = (int)Math.Max(0, r.Y);
+                maxX = (int)Math.Min(Width, r.X + r.Width);
+                maxY = (int)Math.Min(Height, r.Y + r.Height);
             }
-            else
+
+            for (int y = minY; y < maxY; y++)
             {
-                ApplyBrush(_rasterBuffer, _vectorBuffer, alpha);
+                int rowStart = y * _stride;
+                for (int x = minX; x < maxX; x++)
+                {
+                    int i = rowStart + x * 4;
+                    if (isEraser)
+                        ApplyEraserAt(i, alpha);   // реализуйте этот метод, используя _rasterBuffer и _vectorBuffer
+                    else
+                        ApplyBrushAt(i, alpha);    // аналогично
+                }
             }
 
             // Записываем обратно
@@ -248,57 +262,53 @@ namespace DrawProject.Models
             isUnSaved = true;
         }
 
-        private void ApplyBrush(byte[] rasterPixels, byte[] vectorPixels, byte alpha = 255)
+        private void ApplyBrushAt(int i, byte alpha = 255)
         {
-            for (int i = 0; i < rasterPixels.Length; i += 4)
-            {
-                byte vectorAlpha = vectorPixels[i + 3] == 0 ? vectorPixels[i + 3] : alpha;
-                if (vectorAlpha == 0) continue;
+            byte vectorAlpha = _vectorBuffer[i + 3] == 0 ? _vectorBuffer[i + 3] : alpha;
+            if (vectorAlpha == 0) return;
 
-                float srcAlpha = vectorAlpha / 255f;
+            float srcAlpha = vectorAlpha / 255f;
 
-                float dstR = rasterPixels[i] / 255f;
-                float dstG = rasterPixels[i + 1] / 255f;
-                float dstB = rasterPixels[i + 2] / 255f;
-                float dstA = rasterPixels[i + 3] / 255f;
+            float dstR = _rasterBuffer[i] / 255f;
+            float dstG = _rasterBuffer[i + 1] / 255f;
+            float dstB = _rasterBuffer[i + 2] / 255f;
+            float dstA = _rasterBuffer[i + 3] / 255f;
 
-                float srcR = vectorPixels[i] / 255f;
-                float srcG = vectorPixels[i + 1] / 255f;
-                float srcB = vectorPixels[i + 2] / 255f;
+            float srcR = _vectorBuffer[i] / 255f;
+            float srcG = _vectorBuffer[i + 1] / 255f;
+            float srcB = _vectorBuffer[i + 2] / 255f;
 
-                float outR = srcR * srcAlpha + dstR * (1f - srcAlpha);
-                float outG = srcG * srcAlpha + dstG * (1f - srcAlpha);
-                float outB = srcB * srcAlpha + dstB * (1f - srcAlpha);
+            float outR = srcR * srcAlpha + dstR * (1f - srcAlpha);
+            float outG = srcG * srcAlpha + dstG * (1f - srcAlpha);
+            float outB = srcB * srcAlpha + dstB * (1f - srcAlpha);
 
-                float outA = dstA + srcAlpha * (1f - dstA);
+            float outA = dstA + srcAlpha * (1f - dstA);
 
-                rasterPixels[i] = (byte)(outR * 255);
-                rasterPixels[i + 1] = (byte)(outG * 255);
-                rasterPixels[i + 2] = (byte)(outB * 255);
-                rasterPixels[i + 3] = (byte)(outA * 255);
-            }
+            _rasterBuffer[i] = (byte)(outR * 255);
+            _rasterBuffer[i + 1] = (byte)(outG * 255);
+            _rasterBuffer[i + 2] = (byte)(outB * 255);
+            _rasterBuffer[i + 3] = (byte)(outA * 255);
         }
 
-        private void ApplyEraser(byte[] rasterPixels, byte[] vectorPixels, byte alpha = 255)
+        private void ApplyEraserAt(int i, byte alpha = 255)
         {
-            for (int i = 0; i < rasterPixels.Length; i += 4)
+
+            byte eraserAlpha = _vectorBuffer[i + 3] == 0 ? _rasterBuffer[i + 3] : alpha;
+            if (eraserAlpha == 0) return;
+
+            float strength = eraserAlpha / 255f;
+            float currentAlpha = _rasterBuffer[i + 3] / 255f;
+            float newAlpha = currentAlpha * (1 - strength);
+
+            _rasterBuffer[i + 3] = (byte)(newAlpha * 255);
+
+            if (newAlpha == 0)
             {
-                byte eraserAlpha = vectorPixels[i + 3] == 0 ? vectorPixels[i + 3] : alpha;
-                if (eraserAlpha == 0) continue;
-
-                float strength = eraserAlpha / 255f;
-                float currentAlpha = rasterPixels[i + 3] / 255f;
-                float newAlpha = currentAlpha * (1 - strength);
-
-                rasterPixels[i + 3] = (byte)(newAlpha * 255);
-
-                if (newAlpha == 0)
-                {
-                    rasterPixels[i] = 0;
-                    rasterPixels[i + 1] = 0;
-                    rasterPixels[i + 2] = 0;
-                }
+                _rasterBuffer[i] = 0;
+                _rasterBuffer[i + 1] = 0;
+                _rasterBuffer[i + 2] = 0;
             }
+
             isUnSaved = true;
         }
 
@@ -322,14 +332,14 @@ namespace DrawProject.Models
             try
             {
                 resultPixels = await Task.Run(() => filter.Apply(originalPixels, stride, targetWidth, targetHeight, progress, cancellationToken), cancellationToken);
-                if(resultPixels != null)
+                if (resultPixels != null)
                     Debug.WriteLine($"Фильтр завершён в {DateTime.Now:HH:mm:ss.fff}");
                 else
                     Debug.WriteLine($"Фильтрация отменена");
             }
             catch (Exception ex)
             {
-                
+
             }
 
             if (resultPixels != null)

@@ -39,7 +39,11 @@
                 Width="{Binding ImageDocument.Width, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 Height="{Binding ImageDocument.Height, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 Background="Transparent" />
-
+            <Canvas
+                x:Name="_selectionOverlay"
+                Width="{Binding ImageDocument.Width, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Height="{Binding ImageDocument.Height, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Background="Transparent" />
         </Canvas>
     </Grid>
 </UserControl>

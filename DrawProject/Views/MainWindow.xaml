@@ -140,15 +140,15 @@
                         <Separator Margin="0,5,0,10" />
                         <StackPanel Margin="0,0,0,15">
                             <TextBlock Foreground="#2C3E50" Text="Версия: 1.0.0" />
-                            <TextBlock Foreground="#2C3E50" Text="Сборка: Release 2024" />
-                            <TextBlock Foreground="#2C3E50" Text="Дата сборки: 15.12.2024" />
+                            <TextBlock Foreground="#2C3E50" Text="Сборка: Release 2026" />
+                            <TextBlock Foreground="#2C3E50" Text="Дата сборки: 25.02.2026" />
                         </StackPanel>
                         <Separator Margin="0,5,0,10" />
                         <TextBlock
                             FontSize="11"
                             FontStyle="Italic"
                             Foreground="#7F8C8D"
-                            Text="© 2024 DrawProject. Все права защищены." />
+                            Text="© 2026 DrawProject. Все права защищены." />
                         <TextBlock
                             Margin="0,5,0,0"
                             FontSize="11"
@@ -240,24 +240,28 @@
                             Margin="2"
                             Command="{Binding AddLayerCommand}"
                             Header="Add"
+                            IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}"
                             SizeDefinition="Middle" />
                         <fluent:Button
                             MinHeight="60"
                             Margin="2"
                             Command="{Binding RemoveLayerCommand}"
                             Header="Remove"
+                            IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}"
                             SizeDefinition="Middle" />
                         <fluent:Button
                             MinHeight="60"
                             Margin="2"
                             Command="{Binding ClearCommand}"
                             Header="Clear"
+                            IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}"
                             SizeDefinition="Middle" />
                         <fluent:SplitButton
                             x:Name="Filters"
                             MinHeight="60"
                             Margin="2"
                             Header="Filter"
+                            IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}"
                             SizeDefinition="Middle" />
                     </StackPanel>
                 </fluent:RibbonGroupBox>
@@ -276,7 +280,10 @@
                 </fluent:RibbonGroupBox>
             </fluent:RibbonTabItem>
 
-            <fluent:RibbonTabItem Height="Auto" Header="Tools">
+            <fluent:RibbonTabItem
+                Height="Auto"
+                Header="Tools"
+                IsEnabled="{Binding CurrentDoc, Converter={StaticResource ObjectToBoolConverter}}">
                 <fluent:RibbonGroupBox
                     x:Name="ToolsGroup"
                     Height="Auto"
@@ -360,8 +367,13 @@
                             <Border
                                 Background="#F8F8F8"
                                 BorderBrush="LightGray"
-                                BorderThickness="1">
-                                <controls:ZoomBorder x:Name="zoomBorder">
+                                BorderThickness="1"
+                                IsManipulationEnabled="False">
+                                <controls:ZoomBorder
+                                    x:Name="zoomBorder"
+                                    IsManipulationEnabled="False"
+                                    Stylus.IsFlicksEnabled="False"
+                                    Stylus.IsPressAndHoldEnabled="False">
                                     <controls:HybridCanvas
                                         x:Name="drawingCanvas"
                                         Width="{Binding CurrentDoc.Width}"
@@ -370,7 +382,12 @@
                                         VerticalAlignment="Center"
                                         Brush="{Binding CurrentBrush}"
                                         ImageDocument="{Binding CurrentDoc}"
+                                        IsManipulationEnabled="False"
                                         Loaded="DrawingCanvas_Loaded"
+                                        Stylus.IsFlicksEnabled="False"
+                                        Stylus.IsPressAndHoldEnabled="False"
+                                        Stylus.IsTapFeedbackEnabled="False"
+                                        Stylus.IsTouchFeedbackEnabled="False"
                                         Tool="{Binding ActiveTool}" />
                                 </controls:ZoomBorder>
                             </Border>
@@ -425,7 +442,13 @@
                     Padding="10,5"
                     HorizontalAlignment="Center"
                     Command="{Binding CancelFilterCommand}"
-                    Content="Отмена" />
+                    Content="Отмена"
+                    Visibility="{Binding CanCancelFilteringVisibility}" />
+                <TextBlock
+                    Margin="0,0,0,10"
+                    HorizontalAlignment="Center"
+                    FontSize="16"
+                    Text="Изменения до фильтрации не сохранятся" />
             </StackPanel>
         </Border>
     </Grid>

@@ -12,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace DrawProject.Controls
@@ -63,11 +64,9 @@ namespace DrawProject.Controls
         private bool isInitialize = false;
         private int BrushSize = 1;
 
-        private struct ProcessedPoint
-        {
-            public Point Position;
-            public bool IsInterpolated;
-        }
+
+
+        public Rect? SelectionBounds { get; private set; }
 
 
         // === КОНСТРУКТОР ===
@@ -144,7 +143,7 @@ namespace DrawProject.Controls
             var context = new InstrumentContext(this, e, default);
             Tool?.OnMouseUp(context);
 
-            //lastPoint = null;
+
             if (Tool.CommitOnMouseUp)
                 CommitDrawing();
         }
@@ -186,7 +185,7 @@ namespace DrawProject.Controls
             bitmap.Render(_vectorOverlay);
 
             // Применение
-            ImageDocument.ApplyVectorLayer(bitmap, Brush.Color.A, !UseBlend);
+            ImageDocument.ApplyVectorLayer(bitmap, Brush.Color.A, !UseBlend, SelectionBounds);
             _rasterImage.Source = ImageDocument.GetCompositeImage();
             ImageDocument.WasChanged = false;
             bitmap.Freeze();
@@ -203,6 +202,38 @@ namespace DrawProject.Controls
                           });
         }
 
+
+        public void SetSelectionRect(Rect rect)
+        {
+            SelectionBounds = rect;
+            DrawSelectionOverlay();
+        }
+
+        public void ClearSelection()
+        {
+            SelectionBounds = null;
+            _selectionOverlay.Children.Clear();
+        }
+
+        private void DrawSelectionOverlay()
+        {
+            _selectionOverlay.Children.Clear();
+            if (!SelectionBounds.HasValue) return;
+
+            var rect = SelectionBounds.Value;
+            var visualRect = new Rectangle
+            {
+                Stroke = Brushes.Blue,
+                StrokeThickness = 1,
+                StrokeDashArray = new DoubleCollection { 4, 2 },
+                Fill = new SolidColorBrush(Color.FromArgb(30, 0, 120, 255))
+            };
+            Canvas.SetLeft(visualRect, rect.X);
+            Canvas.SetTop(visualRect, rect.Y);
+            visualRect.Width = rect.Width;
+            visualRect.Height = rect.Height;
+            _selectionOverlay.Children.Add(visualRect);
+        }
 
 
         // === ОСТАЛЬНЫЕ МЕТОДЫ ===
