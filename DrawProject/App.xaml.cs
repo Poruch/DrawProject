@@ -17,25 +17,40 @@ namespace DrawProject
             base.OnStartup(e);
             Config = ConfigService.Load();
 
-
             string pluginsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+
             if (Directory.Exists(pluginsFolder))
             {
                 var pluginFiles = Directory.GetFiles(pluginsFolder, "*.dll");
-                if (pluginFiles.Length == 0)
-                {
 
-                }
-                else
+                var existingPaths = new HashSet<string>(Config.Plugins.Select(p => p.Path), StringComparer.OrdinalIgnoreCase);
+
+                var existingNames = new HashSet<string>(Config.Plugins.Select(p => p.Name), StringComparer.OrdinalIgnoreCase);
+
+                foreach (var filePath in pluginFiles)
                 {
-                    int i = 0;
-                    foreach (var item in pluginFiles)
+                    if (existingPaths.Contains(filePath))
+                        continue;
+
+                    string baseName = Path.GetFileNameWithoutExtension(filePath);
+                    string uniqueName = baseName;
+
+                    int counter = 1;
+                    while (existingNames.Contains(uniqueName))
                     {
-                        var plugConfig = new PluginConfig();
-                        plugConfig.Name = $"Plugin {i++}";
-                        plugConfig.Path = item;
-                        Config.Plugins.Add(plugConfig);
+                        uniqueName = $"{baseName} ({counter})";
+                        counter++;
                     }
+
+                    var pluginConfig = new PluginConfig
+                    {
+                        Name = uniqueName,
+                        Path = filePath
+                    };
+
+                    Config.Plugins.Add(pluginConfig);
+                    existingPaths.Add(filePath);
+                    existingNames.Add(uniqueName);
                 }
             }
             else
